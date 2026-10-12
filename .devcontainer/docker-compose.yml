@@ -1,0 +1,28 @@
+# Dev container: a Node workspace plus Neo4j on the same network (the app reaches it at bolt://neo4j:7687).
+services:
+  workspace:
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm
+    volumes:
+      - ..:/workspaces/agent-memory-workshop:cached
+    command: sleep infinity
+    ports:
+      - "4111:4111"   # Mastra Studio (npm run dev); MASTRA_HOST=0.0.0.0 is set in devcontainer.json
+    depends_on:
+      neo4j:
+        condition: service_healthy
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/workshop-password
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p workshop-password 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+volumes:
+  neo4j-data:

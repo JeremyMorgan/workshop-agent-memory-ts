@@ -1,0 +1,28 @@
+{
+  "name": "agent-memory-workshop",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "workspace",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "shutdownAction": "stopCompose",
+  "forwardPorts": [7474, 7687, 4111],
+  "portsAttributes": {
+    "7474": { "label": "Neo4j Browser", "onAutoForward": "notify" },
+    "7687": { "label": "Neo4j Bolt", "onAutoForward": "silent" },
+    "4111": { "label": "Mastra Studio (npm run dev)", "onAutoForward": "notify" }
+  },
+  "containerEnv": {
+    "MASTRA_HOST": "0.0.0.0",
+    "NEO4J_URI": "bolt://neo4j:7687",
+    "NEO4J_USERNAME": "neo4j",
+    "NEO4J_PASSWORD": "workshop-password",
+    "NEO4J_DATABASE": "neo4j"
+  },
+  "remoteEnv": {
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "MODEL": "${localEnv:MODEL}"
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": { "extensions": ["dbaeumer.vscode-eslint", "neo4j-extensions.neo4j-for-vscode"] }
+  }
+}
