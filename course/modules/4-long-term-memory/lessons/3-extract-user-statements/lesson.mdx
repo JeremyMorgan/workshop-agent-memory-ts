@@ -1,0 +1,123 @@
+<Slide title="One call per turn" hideTitle>
+
+<Column slideOnly>
+
+Tool results are structured, so code can map them. What the user says is not, so you need a model to read it.
+
+`extractUserStatements` adds an **input processor**. Before the first model step of each turn, it sends the user's message to a small extraction agent and persists what comes back.
+
+It runs before the first step on purpose. A rule stated in this turn is then already in the graph for this turn.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In workshop.config.ts"
+// STAGE 3: persist user-stated facts and rules (one structured LLM call per user turn).
+extractUserStatements: true,
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="The schema is the contract">
+
+<Column slideOnly>
+
+The extractor returns an object that matches a zod schema, so what reaches the graph has already been shaped.
+
+Look at the `rules` field. The tool must be one of four names, and the mode is `require_approval` or `forbid`. The model cannot invent a rule for a tool that does not exist.
+
+The POLE+O part of the schema comes from `poleSchema` in `src/workshop/graph/pole.ts`: the `user`, the `entities`, and the `relations` between them. Relationship types come from a fixed list: `LIVES_IN`, `WORKS_AT`, `KNOWS`, `OWNS`, `PARTICIPATES_IN`, `LOCATED_IN`, and `RELATED_TO`.
+
+</Column>
+
+<Column slideOnly>
+
+<AnnotatedCode
+  annotations={[
+    "Durable statements that are not entities or preferences.",
+    "The tool is an enum, so a rule can only name a real tool.",
+    "The user, entities, and relations are shared with the onboarding flow.",
+  ]}
+  layout="stack"
+>
+```ts title="In src/workshop/hooks/extractUserStatements.ts"
+export const extractionSchema = z.object({
+  facts: z.array(z.string()),  // (1)
+  rules: z.array(z.object({
+    tool: z.enum(TOOL_NAMES),  // (2)
+    mode: z.enum(["require_approval", "forbid"]),
+    statement: z.string().describe("The user's own words for the rule"),
+  })),
+  ...poleSchema.shape,  // (3)
+});
+```
+</AnnotatedCode>
+
+</Column>
+
+</Slide>
+
+<Slide title="Extraction is not registering">
+
+<Column slideOnly>
+
+The extraction prompt says what **not** to extract. A question is not a fact. A request to do something now is not a rule. "Send it now, no need to confirm" is permission for this request, not a standing instruction.
+
+This matters because a stored rule changes the agent's behavior from then on. A false rule is a defect that survives every restart.
+
+The processor writes only when there is something to write. It upserts the message, then each `Rule`, then the POLE+O entities, then each `Fact`, with `source: "user"` and `trust: "high"`.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In src/workshop/hooks/extractUserStatements.ts"
+const { facts, rules, ...pole } = await extractStatements(runtime.userText);
+if (!facts.length && !rules.length && !hasContent(pole)) return messageList;
+await upsertMessage({ id: runtime.userMessageId, role: "user", text: runtime.userText, turn: runtime.turn, sessionId: runtime.sessionId });
+for (const r of rules) {
+  await upsertRule({ tool: r.tool, mode: r.mode, source: "user", turn: runtime.turn, text: r.statement, messageId: runtime.userMessageId });
+}
+await applyExtraction(pole);
+for (const f of facts) {
+  await upsertFact({ text: f, source: "user", trust: "high", messageId: runtime.userMessageId });
+}
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Say it, then look">
+
+<Column slideOnly>
+
+Restart the chat, state a rule, state a fact, and mention where you live.
+
+Then check the graph. Each query matches one of the three kinds from the first lesson.
+
+If `allRules` is empty, rephrase as a standing instruction. "Never delete anything without asking me first" is a rule. "Be careful with deletes" may not be.
+
+A superseded fact, such as a new city, is an `upsert` here: the node is matched on its text. Replacing an old value with a new one, and keeping the old one as history, is a design choice this workshop leaves to you. NAMS, introduced at the end of the workshop, handles this for you.
+
+</Column>
+
+<Column slideOnly>
+
+```text title="At the prompt"
+you> Never delete anything without asking me first.
+you> Dana is our biggest customer. I live in Leeds and I like short summaries.
+```
+
+```bash title="Check the graph"
+npm run query -- allRules
+npm run query -- allFacts
+npm run query -- userProfile
+```
+
+</Column>
+
+</Slide>

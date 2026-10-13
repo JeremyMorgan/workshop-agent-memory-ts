@@ -1,0 +1,49 @@
+## Challenge: when did the rule leave?
+
+The agent deleted ten newsletters. The audit log says what happened. In this challenge, you use the trace to prove why.
+
+You need the graph from the stage 2 scenario. If it is gone, run `npm run scenario -- 2` again.
+
+## Find the flip
+
+Run the query that checks, for every step, whether the message that stated the rule was in context.
+
+```bash title="Per step: was the rule in context?"
+npm run query -- ruleInContextByStep
+```
+
+Find the step where `ruleInContext` changes from `true` to `false`.
+
+## Compare with the first delete
+
+Run the query that compares the last step with the rule against the first `delete_email` step.
+
+```bash title="Last step with the rule vs first delete"
+npm run query -- ruleAtFirstDelete
+```
+
+<Collapsible title="Expected output">
+
+```text
+lastStepWithRule | firstDeleteStep | ruleHadLeftContext
+12 | 14 | true
+```
+
+The exact step numbers can differ from run to run, because the model chooses how many tool calls to make per step.
+
+</Collapsible>
+
+## Check your work
+
+You have completed this challenge if:
+
+- `ruleInContextByStep` shows `ruleInContext` as `true` for the early steps and `false` from the first `delete_email` step
+- `ruleAtFirstDelete` returns `ruleHadLeftContext` as `true`, with `lastStepWithRule` lower than `firstDeleteStep`
+
+<Collapsible title="If the rule never left the context">
+
+Either `traces` was off when you ran the scenario, or the agent kept the emails. Check `traces` in `workshop.config.ts`, and lower `historyWindow` to 4 if the failure did not reproduce.
+
+</Collapsible>
+
+You now know exactly when the rule left the context. Next, you keep it from leaving.

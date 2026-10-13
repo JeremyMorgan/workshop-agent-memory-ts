@@ -1,0 +1,23 @@
+title: Guardrails in Code, Not in the Prompt
+type: lesson
+order: 1
+duration: 6
+summary: >-
+  In this lesson, you saw why safety rules belong in code:
+
+
+  - You saw that a rule in the prompt is context like any other, and falls out
+  of the window or gets ignored
+
+  - You met two kinds of guard: an approval gate and a recipient allowlist, both
+  run inside tool execution
+
+  - You met memory poisoning: a false fact planted through an email, then
+  trusted because it sits in memory
+
+  - You learned the fix is provenance, the source and trust of each fact,
+  stamped by code
+
+
+  In the next lesson, you turn on the two guards and run the failure from
+  module 2 again.

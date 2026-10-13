@@ -1,0 +1,24 @@
+title: Context Engineering and the Loop
+type: lesson
+order: 1
+duration: 10
+summary: >-
+  In this lesson, you learned how an agent's context is built:
+
+
+  - The model only knows what is in its context window, and the engineer
+  decides what goes in
+
+  - An agent is a loop of model steps and tool calls, and the context is
+  rebuilt at every step
+
+  - You can shape that context in four places: input processors, step hooks,
+  tool guards and memory policies
+
+  - Memory has three layers, short-term, long-term and reasoning, and they
+  live in one graph
+
+  - You set up the workshop repository, Neo4j and your API key
+
+
+  In the next lesson, you run the agent with no memory and break it on purpose.

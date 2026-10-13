@@ -20,7 +20,8 @@
     "neo4j:up": "docker compose up -d && echo 'waiting for neo4j...' && until docker compose exec -T neo4j cypher-shell -u neo4j -p workshop-password 'RETURN 1' >/dev/null 2>&1; do sleep 2; done && echo 'neo4j ready'",
     "neo4j:down": "docker compose down",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "test:llm": "tsx --test test/llm/*.test.ts"
   },
   "license": "Apache-2.0",
   "engines": {

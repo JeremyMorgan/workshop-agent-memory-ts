@@ -1,0 +1,20 @@
+title: "Demo: Poisoning and Provenance"
+type: lesson
+order: 3
+duration: 7
+summary: >-
+  In this lesson, you watched a memory get poisoned and then protected:
+
+
+  - You ran scenario 6 with provenance and the trust filter off, and saw the
+  planted Acme account number stored and served as a trusted fact
+
+  - You turned `provenance` and `trustFilter` on, and saw the same fact stored
+  with `email:external` and `low`, linked to its email
+
+  - You saw the trust filter withhold it from a payment question
+
+  - You queried `externalFacts` to trace a fact back to its sender
+
+
+  In the next module, you take everything you built and make it your own.

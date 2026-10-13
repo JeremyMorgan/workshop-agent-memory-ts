@@ -1,0 +1,20 @@
+title: Pin the Rules
+type: lesson
+order: 4
+duration: 5
+summary: >-
+  In this lesson, you turned on `pinnedRules`:
+
+
+  - You wrote the rule into the graph and out of the conversation, so the
+  window could no longer drop it
+
+  - You saw `PinnedRules` re-read every `Rule` node at every model step and
+  replace a tagged system message
+
+  - You reran the stage 1 script and watched the agent ask instead of delete
+
+  - You checked that the inbox still held 40 emails
+
+
+  In the next lesson, you test the whole module from a fresh session.

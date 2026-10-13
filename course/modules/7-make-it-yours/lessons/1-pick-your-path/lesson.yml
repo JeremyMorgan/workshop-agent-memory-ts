@@ -1,0 +1,19 @@
+title: Pick Your Path
+type: lesson
+order: 1
+duration: 7
+summary: >-
+  In this lesson, you chose how to make the agent yours:
+
+
+  - You recapped the pipeline you built: input processors, step hooks, tool
+  guards, and memory policies
+
+  - You saw the three paths: switch the write mode to `dry-run`, add your own
+  stage or tool, or write your own rule
+
+  - You mapped each piece of the workshop agent to what it becomes in your
+  version
+
+
+  In the next lesson, you build your choice.

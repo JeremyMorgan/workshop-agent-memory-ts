@@ -1,0 +1,115 @@
+<Slide title="Link, then walk" hideTitle>
+
+<Column slideOnly>
+
+Graph retrieval has two steps.
+
+**Link:** find the nodes that the question names. An `Event` whose title or day appears in the question, or an `Issue` whose id does.
+
+**Walk:** from each linked issue, follow `OWNED_BY` and `BLOCKED_BY`, and then the blocker's `OWNED_BY`.
+
+The result is a handful of paths, not a ranked list of text.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In workshop.config.ts"
+retrieval: "graph",
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="The Cypher">
+
+<Column slideOnly>
+
+`graphRetrieve` in `src/workshop/processors/graphContext.ts` runs one query.
+
+The first block links the question to nodes. The `OPTIONAL MATCH` lines walk outward, and are optional so that an issue with no blocker still returns.
+
+The linking here is string matching on titles, days, and ids. A production system might use entity extraction or vector search to find the starting nodes. This lesson focuses on the walk.
+
+</Column>
+
+<Column slideOnly>
+
+<AnnotatedCode
+  annotations={[
+    "Link: events named by title or day in the question.",
+    "Link: issues named by id.",
+    "Walk: the issue's owner and what blocks it.",
+    "Walk: the blocker's owner.",
+  ]}
+  layout="stack"
+>
+```cypher title="In src/workshop/processors/graphContext.ts"
+MATCH (e:Event)
+WHERE toLower($q) CONTAINS toLower(e.title)
+   OR (e.day IS NOT NULL AND toLower($q) CONTAINS toLower(e.day))  // (1)
+// ... UNION
+MATCH (issue:Issue) WHERE toLower($q) CONTAINS toLower(issue.id)  // (2)
+OPTIONAL MATCH (issue)-[:OWNED_BY]->(io:Person)
+OPTIONAL MATCH (issue)-[:BLOCKED_BY]->(blocker:Issue)  // (3)
+OPTIONAL MATCH (blocker)-[:OWNED_BY]->(bo:Person)  // (4)
+```
+</AnnotatedCode>
+
+</Column>
+
+</Slide>
+
+<Slide title="Rendered as context">
+
+<Column slideOnly>
+
+`renderGraphContext` turns the rows into plain lines for a system message. Each line carries the owner, status, and ETA, so the model does not have to infer the relationship.
+
+Like `SemanticContext`, it retrieves once per user turn and tags its message, so it replaces its own copy instead of stacking.
+
+</Column>
+
+<Column slideOnly>
+
+```text title="The system message, abridged"
+GRAPH CONTEXT (entities in the question, plus the relationships around them):
+- Event "Billing review" (Tuesday 2025-06-10 14:00), attendees: Priya, Dana. About: ENG-142.
+- ENG-142 "Billing export fails": owner Priya, status ...
+- ENG-142 is BLOCKED BY ENG-139 "Migrate invoices table": owner Sam, status in progress, ETA ...
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Run all three modes">
+
+<Column slideOnly>
+
+The stage 4 scenario ingests the data, prints what each side retrieved, and asks the question three times, with `retrieval` set to `semantic`, `graph`, and `both`. Tools are off, so each answer shows only what retrieval gave the model.
+
+If the model is unavailable, add `--replay`.
+
+</Column>
+
+<Column slideOnly>
+
+```bash title="Run it"
+npm run scenario -- 4
+```
+
+```bash title="Without a model"
+npm run scenario -- 4 --replay
+```
+
+```text title="Expected summary"
+semantic names Sam: NO   mentions Thursday ETA: no
+graph    names Sam: yes  mentions Thursday ETA: yes
+both     names Sam: yes  mentions Thursday ETA: yes
+```
+
+</Column>
+
+</Slide>

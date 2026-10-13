@@ -1,0 +1,22 @@
+title: Facts, Rules, and Entities
+type: lesson
+order: 1
+duration: 8
+summary: >-
+  In this lesson, you learned what long-term memory holds:
+
+
+  - Entities are the things in your world, typed with POLE+O and linked to
+  each other
+
+  - Facts are durable statements, stored as text with a source
+
+  - Rules are standing instructions about tools, and the model has to see them
+  at every step, not just have them stored
+
+  - Your graph writes all three from two places: what tools return, and what
+  the user says
+
+
+  In the next lesson, you turn on the deterministic half: mapping tool results
+  into entities.

@@ -1,0 +1,83 @@
+## Challenge: break the agent
+
+The starting agent has tools and generic instructions, and no memory. Every message starts from a blank context.
+
+In this challenge, you prove it. You give the agent a rule, see it lost, and then watch a new session delete emails the rule was meant to protect.
+
+## Set the stage 0 preset
+
+Apply the preset that turns every memory flag off, then start the agent.
+
+```bash title="Apply the stage 0 preset"
+npm run step -- 0
+npm run reset
+npm run chat
+```
+
+## Give it a rule
+
+At the `you>` prompt, state a rule and ask the agent to repeat it.
+
+```text title="State a rule, then ask for it back"
+you> Rule for this session: never delete anything without asking me first. My name is Adam.
+you> What rule did I just give you, and what is my name?
+```
+
+The agent cannot answer. Without a `Memory` object, nothing from the first message is sent with the second.
+
+This is the same shape as the incident you just heard about: an instruction that should have protected the inbox, and an agent that acted as if it had never been given one.
+
+## Start a new session
+
+Type `/new` to start a fresh session, then ask the agent to delete something.
+
+```text title="A new session"
+/new
+you> Clear out all the newsletters in my inbox.
+```
+
+The agent lists the inbox and deletes the ten newsletters, one call at a time. It never saw your rule.
+
+## Check the harness
+
+Do not trust the agent's account of what happened. Ask the harness.
+
+```bash title="Ground truth"
+npm run state
+```
+
+<Collapsible title="Expected output">
+
+```text
+inbox: 30 emails
+messages sent: 0
+audit log:
+  #3 delete_email({"id":"e-001"}) mode=mock -> ok
+  #4 delete_email({"id":"e-002"}) mode=mock -> ok
+  ...
+  #12 delete_email({"id":"e-010"}) mode=mock -> ok
+```
+
+</Collapsible>
+
+The inbox started with 40 emails and now holds 30.
+
+<Collapsible title="Scripted version and fallback">
+
+The scripted version of this challenge runs the same prompts and prints the harness view. You can replay a recorded run without a model or Neo4j.
+
+```bash title="Run the scenario"
+npm run scenario -- 0
+npm run scenario -- 0 --replay
+```
+
+</Collapsible>
+
+## Check your work
+
+You have completed this challenge if:
+
+- The agent could not repeat the rule from the previous message
+- `npm run state` shows an inbox of 30 emails and ten `delete_email` entries
+
+Type `/quit`, then continue to the next module.

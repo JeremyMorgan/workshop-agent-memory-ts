@@ -1,0 +1,171 @@
+<Slide title="Short-term memory" hideTitle>
+
+<Column slideOnly>
+
+## Short-term memory
+
+Short-term memory is the conversation itself: the messages between you and the agent, stored as they happen and sent back to the model on the next turn.
+
+At stage 0, nothing was stored, so every message started from a blank context. The agent could not repeat the rule you had just given it.
+
+</Column>
+
+<Column slideOnly>
+
+```text title="Stage 0 and stage 1"
+Stage 0   message -> model
+Stage 1   stored messages + message -> model
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Sessions and users" hideTitle>
+
+<Column slideOnly>
+
+## Sessions and users
+
+Short-term memory is scoped to a **session**: one conversation. Messages stored under a session belong together, and the next turn reads them back from the same one.
+
+A **user** is who the memory belongs to. One user has many sessions. In the REPL, `/new` starts a new session, so what you stored in the last one is no longer sent to the model.
+
+</Column>
+
+<Column slideOnly>
+
+```text title="In the REPL"
+/new
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Turn on history" hideTitle>
+
+<Column slideOnly>
+
+## Turn on history
+
+Every capability in the workshop is a flag. Open `workshop.config.ts` and set `history` to `true`.
+
+Mastra stores the conversation in a local libSQL file and attaches it to the agent through a `Memory` object. The stage code is in `src/workshop/stages/1-history.ts`.
+
+You can also apply the whole preset with `npm run step -- 1`, which rewrites the flag values and keeps your comments.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In workshop.config.ts"
+// STAGE 1: short-term memory. true = Mastra message history is attached to the agent.
+history: true,
+```
+
+```bash title="Or apply the preset"
+npm run step -- 1
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Size the window" hideTitle>
+
+<Column slideOnly>
+
+## Size the window
+
+Mastra sends the model the last N stored messages, set with `lastMessages`. Older messages fall out of the context.
+
+The workshop sets the window small on purpose, so the failure is reproducible in a few turns.
+
+</Column>
+
+<Column slideOnly>
+
+<AnnotatedCode
+  annotations={[
+    "Only the last N stored messages are sent to the model.",
+    "No semantic recall and no working memory: just the window.",
+  ]}
+  layout="stack"
+>
+```ts title="In src/workshop/stages/1-history.ts"
+memory: config.history
+  ? new Memory({
+      storage: new LibSQLStore({ id: "workshop-memory", url: `file:${MASTRA_DB_FILE}` }),
+      options: {
+        lastMessages: config.historyWindow, // (1)
+        semanticRecall: false, // (2)
+        workingMemory: { enabled: false },
+        generateTitle: false,
+      },
+    })
+  : undefined,
+```
+</AnnotatedCode>
+
+</Column>
+
+</Slide>
+
+<Slide title="What counts as a message" hideTitle>
+
+<Column slideOnly>
+
+## What counts as a message
+
+Tool calls and their results count toward the window. A turn is one user message plus one assistant message that holds all of that turn's tool calls, so it takes two stored messages however many tools were called.
+
+With `historyWindow: 6`, the window holds three turns.
+
+Like `history`, `historyWindow` is read when the agent starts. After you change either one, restart `npm run chat`.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In workshop.config.ts"
+// Tool calls count as messages. Small on purpose so a rule falls out of the window.
+historyWindow: 6,
+```
+
+```text title="Six messages, three turns"
+turn 3  user, assistant
+turn 4  user, assistant
+turn 5  user, assistant
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Try it" hideTitle>
+
+<Column slideOnly>
+
+## Try it
+
+Restart the agent and repeat the stage 0 experiment. This time the agent can repeat the rule in the next message.
+
+Type `/new` and ask again, and it cannot, because a new session starts with an empty window.
+
+</Column>
+
+<Column slideOnly>
+
+```bash title="Restart the agent"
+npm run chat
+```
+
+```text title="Within a session"
+you> Rule for this session: never delete anything without asking me first. My name is Adam.
+you> What rule did I just give you, and what is my name?
+```
+
+</Column>
+
+</Slide>

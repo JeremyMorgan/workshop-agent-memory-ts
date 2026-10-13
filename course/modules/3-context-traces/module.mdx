@@ -1,0 +1,10 @@
+A context trace is a record of what the model could see at each step. Without one, "why did it do that?" has no answer beyond guessing.
+
+In this module, you record every model step into Neo4j, explore the trace as a graph, and use it to prove when the rule left the context.
+
+By the end of this module, you will be able to:
+
+- Explain what a context trace records and why it is part of memory rather than a log
+- Switch on `traces` and read the `Session`, `Step`, `Message` and `ToolCall` nodes it writes
+- Query `HAD_IN_CONTEXT` to find the last step that held the rule
+- Compare that step with the first `delete_email` call

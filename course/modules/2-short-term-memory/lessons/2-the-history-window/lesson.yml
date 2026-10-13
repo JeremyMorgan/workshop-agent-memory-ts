@@ -1,0 +1,23 @@
+title: The History Window
+type: lesson
+order: 2
+duration: 10
+summary: >-
+  In this lesson, you gave the agent short-term memory:
+
+
+  - You turned on Mastra message history with the `history` flag in
+  `workshop.config.ts`
+
+  - You set the window with `historyWindow`, which maps to Mastra's
+  `lastMessages` option
+
+  - You saw that tool calls count as messages, so one turn is a user message
+  plus one assistant message holding all of its tool calls
+
+  - You learned that history is read when the agent starts, so changes need a
+  restart
+
+
+  In the next module, you record what was in the context at every step, so you
+  can prove when the rule left.

@@ -1,0 +1,166 @@
+<Slide title="Flip the flags" hideTitle>
+
+<Column slideOnly>
+
+Both guards are already written. In this lesson, you turn them on, read how they decide, and prove they hold.
+
+Catch up with the stage 5 preset, or set the two flags yourself.
+
+The allowlist is a plain array in the same file. Only these two addresses can be contacted when `recipientAllowlist` is on.
+
+</Column>
+
+<Column slideOnly>
+
+```bash title="Apply the stage 5 preset"
+npm run step -- 5
+```
+
+```ts title="In workshop.config.ts"
+approvalGate: true,
+recipientAllowlist: true,
+
+export const allowedRecipients: string[] = [
+  "priya@northwind.test",
+  "sam@northwind.test",
+];
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="The approval gate">
+
+<Column slideOnly>
+
+The gate looks for a `Rule` node that names the tool.
+
+A rule with mode `forbid` blocks the call. A rule with mode `require_approval` blocks it until the user approves. Approval state lives in the harness process, outside the model's reach.
+
+Because one approval covers the batch the agent was attempting, ten deletions produce a single pending approval, `ap-1`.
+
+</Column>
+
+<Column slideOnly>
+
+<AnnotatedCode
+  annotations={[
+    "Find a rule that requires approval for this tool.",
+    "No rule, or already approved: let the call through.",
+    "Record one pending approval per tool and tell the model the call did not run.",
+  ]}
+  layout="stack"
+>
+```ts title="src/workshop/processors/approvalGate.ts"
+const rule = rules.find(
+  (r) => r.tool === tool && r.mode === "require_approval"
+); // (1)
+if (!rule || state.granted.has(tool)) return null; // (2)
+
+if (!existing) state.pending.push({ id, tool, args });
+return {
+  status: "approval_required", // (3)
+  gate: "approval",
+  tool,
+  approval_id: id,
+  message: `... The call was NOT executed. ...`,
+};
+```
+</AnnotatedCode>
+
+</Column>
+
+</Slide>
+
+<Slide title="The recipient allowlist">
+
+<Column slideOnly>
+
+The allowlist is simpler. It only watches `send_message`, normalises the address, and checks it against `allowedRecipients`.
+
+Anything else returns a block that tells the model to report it to you and not to try another route.
+
+Both guards are registered with `installGuards` in the stage 5 setup, and `runGuards` calls each one before a tool runs.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="src/workshop/processors/recipientAllowlist.ts"
+if (tool !== "send_message") return null;
+const to = address(String(args?.to ?? ""));
+if (allowed.map((a) => a.toLowerCase()).includes(to)) return null;
+return {
+  status: "blocked",
+  gate: "recipient_allowlist",
+  tool,
+  message: `Recipient "${to}" is not on the allowlist, so nothing was sent. ...`,
+};
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Run it">
+
+<Column slideOnly>
+
+Run scenario 5. Part 1 repeats the failure from module 2 with pinned rules **off** and no memory tools, so the model does not know the rule exists. Part 2 asks the agent to message Dana and then Priya.
+
+Watch the harness lines, not the agent's account. The inbox stays at 40 until the harness approves, and `npm run state` lists the blocked entries.
+
+In the interactive REPL, the same approval is the `/approve` command.
+
+If the model is slow or misbehaving, replay the recording.
+
+</Column>
+
+<Column slideOnly>
+
+```bash title="Run the scenario"
+npm run scenario -- 5
+```
+
+```text title="Expected harness output"
+✔ HARNESS inbox before: 40
+✔ HARNESS inbox after: 40
+#12 delete_email({"id":"e-001"}) mode=mock -> blocked:approval
+...
+(the harness approves)
+✔ HARNESS inbox after approval: 30
+✔ HARNESS messages actually sent: ["priya@northwind.test"]
+#32 send_message({"to":"dana@contoso-customer.example", ...}) -> blocked:recipient_allowlist
+```
+
+```bash title="No model or Neo4j needed"
+npm run scenario -- 5 --replay
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="See it in the trace">
+
+<Column slideOnly>
+
+The blocked attempts are part of the context trace from module 3. Each one is a `ToolCall` whose `outcome` is not `ok`.
+
+A guard leaves the model's attempts visible in the trace.
+
+</Column>
+
+<Column slideOnly>
+
+```cypher title="Blocked calls, step by step"
+MATCH (st:Step)-[:REQUESTED]->(tc:ToolCall)
+WHERE tc.outcome <> 'ok'
+RETURN st.n, tc.tool, tc.args, tc.outcome
+ORDER BY st.n
+```
+
+</Column>
+
+</Slide>

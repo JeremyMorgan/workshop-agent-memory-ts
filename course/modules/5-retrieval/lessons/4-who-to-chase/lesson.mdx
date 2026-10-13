@@ -1,0 +1,45 @@
+## Challenge: who to chase
+
+Semantic retrieval finds text that sounds like the question. In this challenge, you get an agent to name the person it cannot find by similarity.
+
+## Set up
+
+Start from the stage 4 preset, which turns on `retrieval: "both"`, and ingest the data.
+
+```bash title="Start from the preset"
+npm run step -- 4
+npm run ingest
+```
+
+## Check the graph first
+
+Before asking the agent, check that the path exists.
+
+```bash title="Check the path"
+npm run query -- eventToBlockerOwner
+```
+
+You should get one row: the Billing review, ENG-142, ENG-139, and Sam.
+
+## Compare
+
+Set `retrieval` to `semantic` in `workshop.config.ts`, restart `npm run chat`, and ask the question. Then set it to `graph`, restart, and ask again.
+
+```text title="At the prompt"
+you> Who should I chase before Tuesday's billing review?
+```
+
+## Check your work
+
+With `graph` or `both`, the agent should name **Sam** and note that ENG-139's ETA is **Thursday**, after Tuesday's meeting.
+
+With `semantic` alone, it should not name Sam.
+
+<Collapsible title="If it did not work">
+
+- **The query returns no row:** run `npm run ingest` again, then re-check.
+- **Semantic names Sam:** run `npm run seed:check`, which checks that Sam's data is isolated from the question's wording. `docs/DECISIONS.md` explains the baseline.
+- **The agent calls tools instead:** the scenario turns tools off. In chat, the agent may read the calendar itself, which is a fair way to find Sam but not what this challenge tests.
+- **Compare against the expected run:** `npm run scenario -- 4 --replay`.
+
+</Collapsible>

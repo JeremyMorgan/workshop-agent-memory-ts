@@ -1,0 +1,100 @@
+<Slide title="Yue's inbox, replayed with everything you've built" hideTitle>
+
+<Column slideOnly>
+
+Replay Yue's inbox with the pieces you now hold:
+
+* **History control:** the window size is a setting you choose, not an accident.
+* **Traces:** you can see the exact step where the instruction left.
+* **Pinned rules:** the instruction cannot be trimmed out, because it is re-injected every step.
+* **Approval gate:** even if everything else fails, deletes need approval, in code.
+* **Provenance:** you can tell where every remembered fact came from.
+
+Each one is a decision about what goes into the window and what is allowed out of it, and none of them needs a smarter model.
+
+**You didn't build memory. You built a context pipeline. Now point it at something real.**
+
+{/* SPEAKER NOTES (not for slides). Source for the Yue incident: simonwillison.net/2026/feb/23/summer-yue . Verify names, dates and figures against the source before putting them on a slide. About 2 minutes, then hand over to the three paths. */}
+
+</Column>
+
+</Slide>
+
+<Slide title="You built a context pipeline" hideTitle>
+
+<Column slideOnly>
+
+Over six modules, you built a **context pipeline**: code that decides what is in the window at every step, records what was there, and limits what the model can do.
+
+Each stage you turned on was one part of it.
+
+Everything is switched from one file, `workshop.config.ts`, and assembled in `src/agent.ts`.
+
+</Column>
+
+<Column slideOnly>
+
+| Stage | What it added |
+| --- | --- |
+| 1 | Short-term memory, a history window |
+| 2 | Context traces in Neo4j |
+| 3 | Long-term memory and pinned rules |
+| 4 | Semantic and graph retrieval |
+| 5 | Guards in code |
+| 6 | Provenance and a trust filter |
+
+</Column>
+
+</Slide>
+
+<Slide title="Three paths">
+
+<Column slideOnly>
+
+Pick one. Each takes about 18 minutes and ends with something you can check.
+
+* **Path 1, dry-run:** Run with `mode: "dry-run"`. Writes are logged and reported as success, and nothing changes. Then implement one tool in `src/workshop/nsuite/real.ts` against an API you own, and prove it through the audit log.
+* **Path 2, your own tool or stage:** Add a tool to `customTools` in `src/agent.ts`, or write a tool as a spec so it is audited and mode-switched for free. Teach `mapToolResult` about its output so the results land in the graph.
+* **Path 3, your own rule:** Keep the tools, change the policy. Add a guard, a pinned rule, or a trust rule for something you care about, and make the agent hit it.
+
+</Column>
+
+<Column slideOnly>
+
+| Path | Where you work | How you know it worked |
+| --- | --- | --- |
+| 1. Dry-run | `workshop.config.ts`, `nsuite/real.ts` | `dry-run` entry in the audit log, inbox unchanged |
+| 2. Your own tool or stage | `src/agent.ts`, `tools/` | `ToolCall` nodes for your tool |
+| 3. Your own rule | `processors/`, `workshop.config.ts` | A blocked or pinned entry in the trace |
+
+</Column>
+
+</Slide>
+
+<Slide title="The refactor map">
+
+<Column slideOnly>
+
+To plan a version for your own domain, start from this table.
+
+Take a coding agent as an example: the graph holds files and issues, a fact records a mistake you corrected, a rule says never to edit a protected file without approval, and a retrieval step finds the owner of the code you are changing.
+
+You do not need to change every row. Re-pointing one or two is a good outcome.
+
+</Column>
+
+<Column slideOnly>
+
+| Piece | This workshop | Yours |
+| --- | --- | --- |
+| World | Email, calendar, tickets (`nsuite`) | Your apps and APIs |
+| Tools | `list_emails`, `delete_email`, `send_message` | Tools over your world |
+| Graph mappers | `mapToolResult` into `Email`, `Event`, `Issue` | Entities in your domain |
+| Memory | `Fact`, `Rule`, `User` | What your agent should keep |
+| Retrieval | `Event`, `Issue`, `BLOCKED_BY`, `OWNED_BY` | The relationships your questions follow |
+| Guards | Approval gate, recipient allowlist | What your agent must never do alone |
+| Trust | Internal and external senders | Who and what you trust |
+
+</Column>
+
+</Slide>

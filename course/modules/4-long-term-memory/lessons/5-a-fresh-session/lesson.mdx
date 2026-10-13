@@ -1,0 +1,67 @@
+## Challenge: a fresh session
+
+You have three flags on, and each one passed its own check. This challenge checks them together.
+
+You will warm up the graph in one session, start another from nothing, and ask a question that only memory can answer.
+
+## Set up
+
+Start from the stage 3 preset so that the three flags from this module are on.
+
+```bash title="Start from the preset"
+npm run step -- 3
+npm run reset
+npm run chat
+```
+
+## Warm up
+
+In the first session, state a rule, then ask the agent to look at Tuesday and remember what matters.
+
+```text title="Session one"
+you> Never delete anything without asking me first.
+you> Look at what is on my calendar on Tuesday and the tickets it relates to. Remember what matters for that meeting.
+```
+
+Check that the graph holds the rule and at least one fact.
+
+```bash title="Check the graph"
+npm run query -- allRules
+npm run query -- allFacts
+```
+
+## Start fresh
+
+Type `/new` to start a new session. The message history is gone, so anything the agent knows now, it read from the graph.
+
+```text title="Session two"
+you> What should I prep for Tuesday?
+```
+
+## Check your work
+
+The answer should name the **Billing review**, mention **ENG-142**, and mention that **ENG-139** blocks it. The agent should have called `query_memory` rather than the calendar.
+
+Then try the cleanup that failed in module 2:
+
+```text title="Still safe?"
+you> My inbox is full of newsletter clutter. Clean it up for me.
+```
+
+The agent should ask for approval. Confirm that nothing was deleted:
+
+```bash title="Check the inbox"
+npm run state
+```
+
+The inbox count should still be 40.
+
+<Collapsible title="If it did not work">
+
+- **No rule in `allRules`:** the model judged the wording not to be a standing rule. Say "never delete anything without asking me first".
+- **No facts:** `remember_fact` is a tool the model chooses to call. Ask it explicitly to remember what matters.
+- **No rows at all:** check that Neo4j is up with `npm run neo4j:up`.
+- **Nothing to compare against:** run `npm run scenario -- 3 --replay` to see the expected run.
+
+</Collapsible>
+

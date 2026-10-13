@@ -1,0 +1,137 @@
+<Slide title="Start from stage 2" hideTitle>
+
+<Column slideOnly>
+
+Reset the workshop to the stage 2 preset. History and traces are on, and long-term memory is off.
+
+Then clear the graph so that you start from a known state.
+
+</Column>
+
+<Column slideOnly>
+
+```bash title="Reset to stage 2"
+npm run step -- 2
+npm run reset
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Flip the flag">
+
+<Column slideOnly>
+
+Your agent's tools already return structured data: emails, events, and tickets. The `mapToolResults` flag adds a **step hook** that reads each tool result as the step finishes and writes it to Neo4j.
+
+Open `workshop.config.ts` and set the flag. Restart `npm run chat` after any change to the config.
+
+The mapper itself, `mapToolResult` in `src/workshop/hooks/mapToolResults.ts`, is a plain function: tool name and output in, a list of nodes and relationships out. Nothing in it calls a model, so the same email always produces the same nodes.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In workshop.config.ts"
+// STAGE 3: map tool results (emails, events, issues) into graph entities, deterministically.
+mapToolResults: true,
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="What the mapper writes">
+
+<Column slideOnly>
+
+The mapper keys people by first name, so the calendar, the tickets, and the inbox all agree that `Priya` is one node.
+
+A `get_events` result produces an `Event` node, `ATTENDED_BY` relationships to each attendee, and `ABOUT` relationships to the tickets in the invite. A `get_issue` result produces an `Issue`, `OWNED_BY` its owner, and `BLOCKED_BY` anything blocking it.
+
+Each node also gets its POLE+O label, so an `Issue` is an `:Object` too.
+
+</Column>
+
+<Column slideOnly>
+
+<AnnotatedCode
+  annotations={[
+    "A pure function: tool name and output in, a delta out.",
+    "Events point at the tickets they are about.",
+    "Issues point at their owner and at what blocks them.",
+  ]}
+  layout="stack"
+>
+```ts title="In src/workshop/hooks/mapToolResults.ts"
+export function mapToolResult(tool: string, output: any, people: People = {}): GraphDelta {  // (1)
+  // ...
+  case "get_events":
+    for (const ev of output?.events ?? []) {
+      // ... ev.attendees -> ATTENDED_BY
+      for (const t of ev.tickets ?? []) {
+        d.rels.push({ from: { label: "Event", key: ev.id }, type: "ABOUT", to: { label: "Issue", key: t } });  // (2)
+      }
+    }
+    break;
+  // ... issue(): OWNED_BY, BLOCKED_BY  // (3)
+}
+```
+</AnnotatedCode>
+
+</Column>
+
+</Slide>
+
+<Slide title="Run it and check the graph">
+
+<Column slideOnly>
+
+Start the chat and ask about Tuesday. Then check the graph.
+
+The agent called `get_events` and `get_issue`. Nothing told it to write to memory, and the graph now holds the event, the tickets, and the people.
+
+The second query follows a path across three node types. You will rely on it in the next module.
+
+</Column>
+
+<Column slideOnly>
+
+```bash title="Ask"
+npm run chat
+```
+
+```text title="At the prompt"
+you> What is on my calendar on Tuesday, and what tickets does it relate to?
+```
+
+```cypher title="In Neo4j Browser (http://localhost:7474)"
+MATCH (e:Event)-[:ABOUT]->(i:Issue)-[:OWNED_BY]->(p:Person)
+RETURN e.title, i.id, p.name
+```
+
+</Column>
+
+</Slide>
+
+<TranscriptOnly>
+
+<Collapsible title="Reveal the complete hook wiring">
+
+```ts title="In src/workshop/stages/3-long-term.ts"
+stepHooks: [
+  async (step) => {
+    if (!config.mapToolResults) return;
+    const people = loadSeed().people;
+    for (const r of step.toolResults ?? []) {
+      const p = r.payload ?? r;
+      await applyDelta(mapToolResult(p.toolName, p.result, people));
+    }
+  },
+],
+```
+
+</Collapsible>
+
+</TranscriptOnly>

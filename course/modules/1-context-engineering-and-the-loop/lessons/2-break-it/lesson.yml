@@ -1,0 +1,20 @@
+title: Break It
+type: challenge
+order: 2
+duration: 10
+summary: >-
+  In this challenge, you broke the agent:
+
+
+  - You applied the stage 0 preset, which turns every memory flag off
+
+  - You gave the agent a rule, and it could not repeat it in the next message
+
+  - In a new session, it deleted ten newsletters without asking
+
+  - You confirmed the damage with `npm run state`, the harness view that does
+  not rely on the agent's account of what it did
+
+
+  In the next module, you give the agent short-term memory and find out where
+  it stops working.

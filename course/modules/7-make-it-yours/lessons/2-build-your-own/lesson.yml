@@ -1,0 +1,18 @@
+title: Build Your Own
+type: challenge
+order: 2
+duration: 18
+summary: >-
+  In this challenge, you made the agent yours:
+
+
+  - You chose one path: dry-run writes, your own tool or stage, or your own
+  rule
+
+  - You built it in the repository and ran it through the harness
+
+  - You checked it against ground truth, with `npm run state` and a query on
+  the graph, instead of trusting the agent's account
+
+
+  In the next lesson, you show what you built.

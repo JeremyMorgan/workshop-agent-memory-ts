@@ -131,7 +131,7 @@ RETURN e.title, i.id, b.id, b.eta, o.name
 ---
 
 ## Stage 6: memory poisoning and provenance
-Use a smaller model so it follows the injected line: start Studio with `MODEL=openai/gpt-5.4-mini npm run dev` (large models usually refuse).
+The default model (`gpt-5.4-mini`) follows the injected line. Larger models may refuse; override with `MODEL=provider/model npm run dev`.
 `npm run step -- 6` · `npm run reset`
 
 **Part 1: set `provenance: false` and `trustFilter: false`** in `workshop.config.ts`.

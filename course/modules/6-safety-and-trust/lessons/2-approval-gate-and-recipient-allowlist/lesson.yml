@@ -1,0 +1,22 @@
+title: Approval Gate and Recipient Allowlist
+type: lesson
+order: 2
+duration: 7
+summary: >-
+  In this lesson, you turned on the two guards:
+
+
+  - You flipped `approvalGate` and `recipientAllowlist` in
+  `workshop.config.ts`
+
+  - You read how `checkApproval` and `checkRecipient` decide, and how they run
+  inside tool execution
+
+  - You ran scenario 5 and saw `delete_email` blocked with `approval_required`
+  while the inbox stayed at 40
+
+  - You saw the same call succeed after the harness approved it, and
+  `send_message` refused for Dana but allowed for Priya
+
+
+  In the next lesson, you plant a false memory and trace it back to its source.

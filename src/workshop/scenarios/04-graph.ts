@@ -5,7 +5,7 @@ import type { Scenario } from "./ctx.js";
 
 const QUESTION = "Who should I chase before Tuesday's billing review?";
 // Same suffix for every mode: the point is what retrieval put in context, not whether the agent goes exploring.
-const PROMPT = `${QUESTION}\n\n(Answer from the context you have been given. No tools are available for this question.)`;
+const PROMPT = `${QUESTION}\n\n(Answer from the context you have been given, including any dates that matter. No tools are available for this question.)`;
 
 export const scenario: Scenario = {
   stage: 4,

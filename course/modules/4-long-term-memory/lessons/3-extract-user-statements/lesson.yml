@@ -1,0 +1,21 @@
+title: Extract What the User Says
+type: lesson
+order: 3
+duration: 6
+summary: >-
+  In this lesson, you turned on `extractUserStatements`:
+
+
+  - You added one structured-output LLM call per user turn, run as an input
+  processor before the model's first step
+
+  - You saw the zod schema that forces the result into `facts`, `rules`, and
+  POLE+O `entities` and `relations`
+
+  - You stated a rule and a fact, and found the `Rule`, `Fact`, and `User`
+  nodes in the graph
+
+  - You learned that extraction is selective: a request is not a rule
+
+
+  In the next lesson, you pin the rules so the model sees them at every step.

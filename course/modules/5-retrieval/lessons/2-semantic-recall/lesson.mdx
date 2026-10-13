@@ -1,0 +1,79 @@
+<Slide title="An honest baseline" hideTitle>
+
+<Column slideOnly>
+
+Mastra has its own semantic recall, which searches past messages in a thread. This workshop does not use it.
+
+The question here is about emails, events, and tickets, not about earlier messages, so the baseline is a small custom index in `src/workshop/retrieval/semanticIndex.ts`.
+
+It embeds one chunk per email, event, and ticket locally with `@mastra/fastembed`, so no API key is needed, and ranks them by cosine similarity. No tricks: plain chunks, plain top-k.
+
+The `topK` of 4 is Mastra's own default for semantic recall, so the baseline is not tuned to lose.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In src/workshop/retrieval/semanticIndex.ts"
+const model = fastembed.small;
+// one chunk per email, event and ticket
+// cosine(query, chunk) -> top k
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Switch it on">
+
+<Column slideOnly>
+
+`SemanticContext` is an input processor. Once per user turn, it searches the index with the user's question and adds the top 4 hits as a system message. It records the retrieved items and their scores, so they appear in the trace.
+
+Set `retrieval` to `semantic` and restart.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In workshop.config.ts"
+// STAGE 4: retrieval before each answer. "none" | "semantic" | "graph" | "both"
+retrieval: "semantic",
+```
+
+```ts title="In src/workshop/processors/semanticContext.ts"
+let hits = await semanticSearch(q, TOP_K);
+// ...
+text = `SEMANTIC RECALL (top ${TOP_K} most similar items to the question):\n` +
+  hits.map((h) => `- [${h.chunk.kind} ${h.chunk.id}, similarity ${h.score.toFixed(2)}] ...`).join("\n");
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Ask the question">
+
+<Column slideOnly>
+
+Ask the billing question with tools off, so the answer shows only what retrieval put in the context.
+
+The scenario in the next lessons does this for you. For now, run the chat and ask.
+
+What comes back sounds right: the review, Dana's escalation, the Finance emails. Look for Sam.
+
+</Column>
+
+<Column slideOnly>
+
+```text title="At the prompt"
+you> Who should I chase before Tuesday's billing review?
+```
+
+```bash title="What was retrieved"
+npm run query -- systemContext
+```
+
+</Column>
+
+</Slide>

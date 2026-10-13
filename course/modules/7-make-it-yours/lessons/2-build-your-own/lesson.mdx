@@ -1,0 +1,140 @@
+<Slide title="The brief" hideTitle>
+
+<Column slideOnly>
+
+Build one thing and prove it works. You have about 18 minutes.
+
+Prove it with the harness, not with the agent. The agent can say it did anything. `npm run state` and the graph cannot.
+
+If you get stuck, catch up with `npm run step -- 6`, which turns on everything from the workshop, and build from there.
+
+</Column>
+
+<Column slideOnly>
+
+```bash title="Ground truth"
+npm run state
+```
+
+```bash title="Run the agent"
+npm run chat
+```
+
+```bash title="See your tool in the graph"
+npm run query -- toolCalls
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Path 1: dry-run and real writes">
+
+<Column slideOnly>
+
+Set `mode` to `dry-run` and ask the agent to clean up the inbox. The call is logged and reported as a success, and the inbox does not change.
+
+Then implement one function in `src/workshop/nsuite/real.ts`. Each function throws "not configured" until you do. Set `mode: "real"`. Writes now call yours, still through the audit log and the guards from module 6.
+
+Reads stay mock unless you also set `REAL_READS=1`.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In workshop.config.ts"
+mode: "dry-run",
+```
+
+```ts title="In src/workshop/nsuite/real.ts"
+delete_email: async ({ id }) => {
+  const res = await fetch(`https://api.example.com/messages/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${process.env.MAIL_TOKEN}` },
+  });
+  if (!res.ok) throw new Error(`delete failed: ${res.status}`);
+  return { deleted: true, remaining: -1 };
+},
+```
+
+**Check:** the audit log shows a `dry-run` entry and the inbox is unchanged.
+
+</Column>
+
+</Slide>
+
+<Slide title="Path 2: your own tool or stage">
+
+<Column slideOnly>
+
+The quick way is a Mastra tool in `customTools`, in the `YOUR TOOLS` block of `src/agent.ts`. It is registered with the agent and with Mastra Studio.
+
+Tools added this way are not audited or mode-switched, and the module 6 guards only cover the built-in tools.
+
+For a tool that is audited and mode-switched for free, write it as a `spec` in `src/workshop/tools/`, add it to the `specs` and `baseTools` lists in `src/workshop/tools/index.ts`, and mark `write: true` for anything with side effects.
+
+To have its results land in the graph, teach `mapToolResult` in `src/workshop/hooks/mapToolResults.ts` about its output.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In src/agent.ts"
+import { createTool } from "@mastra/core/tools";
+import { z } from "zod";
+
+const word_count = createTool({
+  id: "word_count",
+  description: "Count the words in a text",
+  inputSchema: z.object({ text: z.string() }),
+  execute: async ({ text }) => ({
+    words: text.split(/\s+/).filter(Boolean).length,
+  }),
+});
+
+export const customTools = { word_count };
+```
+
+```cypher title="Check: your tool in the trace"
+MATCH (tc:ToolCall)
+RETURN tc.tool, count(*) AS calls
+ORDER BY calls DESC
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Path 3: your own rule">
+
+<Column slideOnly>
+
+Change the policy and leave the tools alone.
+
+Good candidates: add another address to `allowedRecipients`, add a third trusted domain to `internalDomains`, or say a standing rule to the agent in `npm run chat` and watch the approval gate hold it. Type `/approve` when the agent reports a pending approval.
+
+If your rule needs new behaviour, write a guard. A guard is a function that returns `null` to allow a call or a block to refuse it, and `installGuards` registers it.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="A guard has this shape"
+import type { Guard } from "../tools/guards.js";
+
+export const myGuard: Guard = ({ tool, args }) => {
+  if (tool !== "update_event") return null;
+  return {
+    status: "blocked",
+    gate: "my_guard",
+    tool,
+    message: "Calendar changes need a human. Nothing was changed.",
+  };
+};
+```
+
+**Check:** `npm run state` lists a `blocked:` entry for your guard.
+
+</Column>
+
+</Slide>

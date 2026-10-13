@@ -1,0 +1,21 @@
+title: Graph Retrieval
+type: lesson
+order: 3
+duration: 6
+summary: >-
+  In this lesson, you turned on graph retrieval:
+
+
+  - You set `retrieval` to `graph` and saw `GraphContext` link the entities in
+  the question to nodes
+
+  - You read the Cypher that walks `Event`, `Issue`, the blocking `Issue`,
+  and the owner
+
+  - You saw the retrieved paths rendered as a system message with the
+  blocker's owner and ETA
+
+  - You compared semantic, graph, and both on the same question
+
+
+  In the next lesson, you check the result yourself.

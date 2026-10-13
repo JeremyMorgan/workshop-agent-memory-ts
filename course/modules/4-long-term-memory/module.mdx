@@ -1,0 +1,11 @@
+Long-term memory is what the agent knows that is not in the window: the entities in your world, the facts you have stated, and the rules you have set. It is stored in the graph, so it outlives any conversation.
+
+In this module, you write three pieces of the context pipeline: a deterministic mapper that turns tool results into entities, an extractor that turns what you say into facts, rules and entities, and a processor that pins your rules into the context at every step.
+
+By the end of this module, you will be able to:
+
+- Explain the difference between facts, rules, and entities
+- Map tool results into graph entities without an LLM call
+- Extract facts, rules, and POLE+O entities from what a user says
+- Pin standing rules into the context at every step, so they cannot fall out of the window
+- Prove a fresh session still knows what the last one learned

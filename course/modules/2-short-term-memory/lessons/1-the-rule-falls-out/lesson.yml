@@ -1,0 +1,23 @@
+title: The Rule Falls Out
+type: lesson
+order: 1
+duration: 10
+summary: >-
+  In this lesson, you watched short-term memory fail:
+
+
+  - You ran the five-turn script, where a rule stated in turn 1 is followed by
+  ten `read_email` calls
+
+  - You saw the agent respect the rule while it was in the window, and delete
+  ten newsletters once it had scrolled out
+
+  - You checked the damage with `npm run state` rather than the agent's
+  account, and saw the inbox fall from 40 emails to 30
+
+  - You learned that the context does not have to be full for a rule to leave
+  it
+
+
+  In the next lesson, you turn on message history yourself and size the window
+  that let the rule fall out.

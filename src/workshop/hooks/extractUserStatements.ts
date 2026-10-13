@@ -5,7 +5,7 @@ import { Agent } from "@mastra/core/agent";
 import type { Processor, ProcessInputArgs } from "@mastra/core/processors";
 import { z } from "zod";
 import { config } from "../../../workshop.config.js";
-import { EXTRACTION_MODEL } from "../env.js";
+import { EXTRACTION_MODEL, modelConfig } from "../env.js";
 import { applyExtraction, hasContent, poleSchema } from "../graph/pole.js";
 import { upsertFact, upsertMessage, upsertRule } from "../graph/store.js";
 import { runtime } from "../runtime.js";
@@ -27,7 +27,7 @@ const getExtractor = () =>
   (extractor ??= new Agent({
     id: "statement-extractor",
     name: "statement-extractor",
-    model: EXTRACTION_MODEL as any,
+    model: modelConfig(EXTRACTION_MODEL),
     instructions: `You extract what a user STATES, from a single message sent to their assistant.
 Return user: the user's own name, a fun fact they share about themselves, and preferences about how they like things done ("I prefer short summaries").
 Return entities and relations using POLE+O: Person, Object, Location, Event, Organization. Entities are things the user mentions other than themself. Relations connect the user (write "user") or an entity to another entity, with type LIVES_IN, WORKS_AT, KNOWS, OWNS, PARTICIPATES_IN, LOCATED_IN or RELATED_TO. Examples: "I live in Leeds" gives entity Location "Leeds" and relation user LIVES_IN Leeds; "I work at Neo4j" gives Organization "Neo4j" and user WORKS_AT Neo4j; "my manager Priya" gives Person "Priya" and user KNOWS Priya; "Dana works at Contoso" gives Person "Dana", Organization "Contoso" and Dana WORKS_AT Contoso. Every relation endpoint must also appear in entities (except "user").

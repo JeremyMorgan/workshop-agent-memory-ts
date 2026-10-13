@@ -1,0 +1,20 @@
+title: A Fresh Session Remembers
+type: challenge
+order: 5
+duration: 5
+summary: >-
+  In this challenge, you proved that long-term memory outlives a session:
+
+
+  - You warmed the graph up in one session
+
+  - You started a new session, with no message history, and asked what to
+  prep for Tuesday
+
+  - You confirmed the answer came from memory, and that cleanup still deleted
+  nothing
+
+
+  In the next module, you ask a question where memory has the facts but the
+  agent still cannot find the answer, because the answer lives in a
+  relationship.

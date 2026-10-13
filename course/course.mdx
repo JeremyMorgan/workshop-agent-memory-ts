@@ -1,0 +1,35 @@
+The Agent Memory Workshop with Mastra is the companion course for the instructor-led workshop on context engineering. Over roughly three hours, you take a TypeScript agent that works for a single conversation and then forgets, and you build the context pipeline around it that makes it remember, explain itself and stay safe, with Neo4j as the memory.
+
+The model only knows what is in its context window, and you decide what goes in. Most agent failures are context failures: a rule that scrolled out of the window, a fact that was never saved, a note nobody checked. This workshop reproduces each failure on purpose, then fixes it, one capability at a time.
+
+## Who this workshop is for
+
+This workshop is for developers building agents that act on a user's behalf and need to remember, justify and constrain what they do. You should be comfortable reading TypeScript and running commands in a terminal, and have a little experience of Cypher. If you have built an agent with Mastra or a similar framework and hit the limits of a growing message list, this workshop shows a structured alternative where memory is data you can query. You can follow it live with an instructor or work at your own pace: every lesson includes the commands and expected output you need.
+
+## What you'll do
+
+You work with a personal assistant that has tools for email, calendar and tickets over a fake but deterministic workspace. You start with an agent that has no memory and watch it delete emails it should have left alone. Then you:
+
+- Turn on Mastra message history and see a rule fall out of a small window
+- Record every model step as a context trace in Neo4j and ask the graph exactly when the rule left the context
+- Persist facts, rules and entities as long-term memory, and pin the rules into every step
+- Retrieve with a graph walk where similarity search cannot follow a relationship
+- Move approvals and recipient rules out of the prompt and into code, and trace a poisoned memory to its source
+- Make the agent your own, with your own tools or rules
+
+## What you need
+
+- Node.js 22.13 or later and npm
+- Docker, to run Neo4j locally
+- A workshop API key from GraphAcademy, set in `.env` (or your own OpenAI API key)
+- A code editor and a terminal
+
+The first lesson walks through the setup.
+
+## Where to go next
+
+- [Context Graphs: Agent Memory with Neo4j](/courses/genai-context-graphs) covers the same memory concepts as a self-paced course.
+- [Building GraphRAG TypeScript MCP tools](/courses/genai-mcp-build-custom-tools-typescript) shows you how to expose tools like these to any MCP client.
+- [Neo4j Agent Memory Service (NAMS)](https://memory.neo4jlabs.com) is a managed memory service you can use for your own agent, over REST or MCP.
+- The Python version of this workshop, [Neo4j Agent Memory Workshop](/courses/workshop-agent-memory), builds the same ideas with Pydantic AI.
+- This workshop counts toward the [Neo4j & Generative AI Certification](/certifications/genai-certification), and upcoming sessions are listed on the [workshops page](/workshops).

@@ -1,0 +1,21 @@
+title: Record the Trace
+type: lesson
+order: 2
+duration: 6
+summary: >-
+  In this lesson, you recorded what the model could see:
+
+
+  - You set `traces` to `true` in `workshop.config.ts`
+
+  - You saw that an input processor snapshots the messages sent to the model
+  at each step
+
+  - You saw that an `onStepFinish` hook writes the `Step` node and its
+  `ToolCall` nodes
+
+  - You ran the stage 2 preset and restarted the agent
+
+
+  In the next lesson, you explore the trace in Neo4j and set it beside the
+  audit log.

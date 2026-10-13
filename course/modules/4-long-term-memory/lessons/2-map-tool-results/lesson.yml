@@ -1,0 +1,23 @@
+title: Map Tool Results into the Graph
+type: lesson
+order: 2
+duration: 6
+summary: >-
+  In this lesson, you turned on `mapToolResults`:
+
+
+  - You started from the stage 2 preset, so history and traces were on and
+  long-term memory was off
+
+  - You flipped one flag and the step hook began writing `Email`, `Event`,
+  `Issue`, and `Person` nodes from every tool result
+
+  - You saw that the mapper is a pure function, with no LLM call and the same
+  output every time
+
+  - You checked the result with a path query in the Neo4j Browser
+  from `Event` to `Person`
+
+
+  In the next lesson, you add the half that needs a model: extracting what the
+  user says.

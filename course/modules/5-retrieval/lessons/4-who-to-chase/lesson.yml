@@ -1,0 +1,19 @@
+title: Who to Chase
+type: challenge
+order: 4
+duration: 8
+summary: >-
+  In this challenge, you got the right answer from the graph:
+
+
+  - You confirmed that the path from the Billing review to Sam exists in your
+  graph
+
+  - You asked the question in your own chat with graph retrieval on
+
+  - You saw the agent name Sam and note that ENG-139's ETA is Thursday, after
+  the meeting
+
+
+  In the next module, you stop the agent from doing harm even when its context
+  is right, by enforcing the rules in code.

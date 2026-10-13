@@ -34,7 +34,7 @@ if (flags.has("--replay")) {
 }
 
 const { scenario } = (await import(`./${slug}.js`)) as { scenario: Scenario };
-if (scenario.model) process.env.MODEL = process.env.POISON_MODEL || scenario.model; // before env.ts is loaded
+if (scenario.model || (n === 6 && process.env.POISON_MODEL)) process.env.MODEL = (n === 6 && process.env.POISON_MODEL) || scenario.model!; // before env.ts is loaded
 const { resetAll } = await import("../harness/reset.js");
 const { closeDriver } = await import("../graph/driver.js");
 const { makeCtx } = await import("./ctx.js");

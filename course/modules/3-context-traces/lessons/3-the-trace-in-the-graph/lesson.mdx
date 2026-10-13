@@ -1,0 +1,130 @@
+<Slide title="Reproduce the failure, with traces on" hideTitle>
+
+<Column slideOnly>
+
+## Reproduce the failure, with traces on
+
+The stage 2 scenario runs the same five turns as before, with `traces` on. When it finishes, the graph holds the whole run.
+
+If you have no model or database to hand, replay the recording instead. It prints the same output, including the query results.
+
+</Column>
+
+<Column slideOnly>
+
+```bash title="Run the scenario"
+npm run scenario -- 2
+```
+
+```bash title="Fallback: replay a recording"
+npm run scenario -- 2 --replay
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Look at the graph" hideTitle>
+
+<Column slideOnly>
+
+## Look at the graph
+
+Open the Neo4j Browser at [http://localhost:7474](http://localhost:7474) and run the query to see the first steps of the session.
+
+Each `Step` links to the messages the model could see and to the tool calls it asked for. Click a `Step` and follow `HAD_IN_CONTEXT` to see its context.
+
+</Column>
+
+<Column slideOnly>
+
+```cypher title="The first steps and their context"
+MATCH (st:Step)
+WITH st ORDER BY st.sessionId, st.n LIMIT 4
+OPTIONAL MATCH (st)-[:HAD_IN_CONTEXT]->(m:Message)
+OPTIONAL MATCH (st)-[:REQUESTED]->(tc:ToolCall)
+RETURN st, m, tc
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="One row per step" hideTitle>
+
+<Column slideOnly>
+
+## One row per step
+
+The named query `stepContext` lists each step with the tools it requested, how many messages were in context, and which system messages were injected.
+
+Step 14 is the one to look for: it requested ten `delete_email` calls.
+
+</Column>
+
+<Column slideOnly>
+
+```bash title="List the steps"
+npm run query -- stepContext
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="The agent's account against the record" hideTitle>
+
+<Column slideOnly>
+
+## The agent's account against the record
+
+The agent finished the run by telling you what it did. The harness has its own record of every tool call it received, in `src/workshop/nsuite/audit.ts`: an append-only log with the tool, its arguments, the mode and the outcome.
+
+Put the two side by side. In the scenario, the agent says it deleted ten newsletters and the audit log shows ten `delete_email` calls, so they agree. You can check, and when the two disagree, the record wins.
+
+</Column>
+
+<Column slideOnly>
+
+```text title="The agent said"
+agent> Deleted all 10 newsletter emails from your inbox.
+```
+
+```bash title="The harness recorded"
+npm run state
+```
+
+```text title="From the audit log"
+#16 delete_email({"id":"e-001"}) mode=mock -> ok
+#17 delete_email({"id":"e-002"}) mode=mock -> ok
+...
+#25 delete_email({"id":"e-010"}) mode=mock -> ok
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Trace and audit log together" hideTitle>
+
+<Column slideOnly>
+
+## Trace and audit log together
+
+The audit log tells you what happened. The trace tells you what the model could see when it happened.
+
+Each `ToolCall` node carries an `outcome`, so later stages can show blocked calls in the trace too.
+
+</Column>
+
+<Column slideOnly>
+
+```cypher title="Every tool call and what became of it"
+MATCH (st:Step)-[:REQUESTED]->(tc:ToolCall)
+RETURN st.n AS step, tc.tool AS tool, tc.args AS args, tc.outcome AS outcome
+ORDER BY st.n, tc.position
+```
+
+</Column>
+
+</Slide>

@@ -1,0 +1,16 @@
+title: Show and Tell, and What's Next
+type: lesson
+order: 3
+duration: 5
+summary: >-
+  In this lesson, you shared what you built and looked ahead:
+
+
+  - You described in two minutes what your agent remembers, and why
+
+  - You met NAMS, the Neo4j Agent Memory Service, a managed form of the
+  storage, extraction, embedding, and deduplication you built by hand
+
+  - You saw where to learn more about Neo4j and agent memory
+
+  - You were invited to write up your agent for the GraphAcademy blog

@@ -29,9 +29,8 @@ export const scenario: Scenario = {
   stage: 6,
   slug: "06-poisoning",
   title: "Stage 6: memory poisoning and provenance",
-  // Larger models usually refuse to act on instructions embedded in an email; a smaller one follows them,
-  // which is the failure this stage demonstrates. Override with POISON_MODEL.
-  model: "openai/gpt-5.4-mini",
+  // Uses the default MODEL. Some models refuse to act on instructions embedded in an email, which hides the
+  // failure this stage demonstrates; set POISON_MODEL=provider/model to try a different one.
   async run(ctx) {
     approvals.reset();
     ctx.title("Part 1: provenance OFF, trustFilter OFF");

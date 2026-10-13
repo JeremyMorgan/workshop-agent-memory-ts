@@ -1,0 +1,36 @@
+title: Agent Memory Workshop with Mastra
+description: >-
+  Hands-on workshop: engineer the context of a TypeScript agent built with
+  Mastra. Add short-term memory, context traces, long-term memory, graph
+  retrieval and guardrails, all backed by Neo4j.
+status: active
+type: workshop
+categories:
+  - workshops: 0
+  - genai: 0
+duration: 180
+repository: neo4j-graphacademy/workshop-agent-memory-ts
+tags: []
+proxy:
+  enabled: true
+  models:
+    - gpt-5.4-mini
+    - gpt-5.4-nano
+  callLimit: 120
+  callLimitPeriod: PT2M
+  tokenBudget: 1000000
+keyPoints:
+  - title: Context engineering
+    description: Treat the context window as something you design. The model only knows what is in it, and you decide what goes in at each step of the agent loop.
+  - title: Mastra memory
+    description: Use Mastra message history, input processors and step hooks to keep, trim and inject context, and see what happens when a rule scrolls out of the window.
+  - title: Context traces
+    description: Record what was in the context at every model step as Step, Message and ToolCall nodes in Neo4j, so you can answer why the agent did something.
+  - title: Graph retrieval
+    description: Follow relationships from an event to an issue to its blocker's owner with Cypher, and compare the answer to flat semantic recall.
+  - title: Safety and trust
+    description: Enforce approval and recipient rules in code rather than in the prompt, and trace a poisoned memory back to the email it came from.
+brand:
+  shape: nodes2
+  color: periwinkle
+  background: lavender

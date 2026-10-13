@@ -1,0 +1,23 @@
+title: What Was in Context
+type: lesson
+order: 1
+duration: 7
+summary: >-
+  In this lesson, you learned why the agent's own account is not evidence:
+
+
+  - In a reported 2025 incident, a coding agent ran destructive commands
+  against a live database, then gave an account of what was recoverable that
+  was reported to be wrong
+
+  - The record of what the system received is the evidence to audit, not the
+  agent's story about it
+
+  - A context trace records what the model could see at each step, and what it
+  did next
+
+  - A trace is part of memory, held in the same graph as the conversation and
+  the rules, not a log kept beside it
+
+
+  In the next lesson, you switch on the `traces` flag.

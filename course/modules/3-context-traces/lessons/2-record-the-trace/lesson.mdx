@@ -1,0 +1,120 @@
+<Slide title="Two hook points, one trace" hideTitle>
+
+<Column slideOnly>
+
+## Two hook points, one trace
+
+A trace needs two things: what the model was about to see, and what it did.
+
+The first is only available before the model is called, so it is an **input processor**. The second is only available after, so it is a **step hook**, run from Mastra's `onStepFinish`.
+
+Both live in `src/workshop/hooks/recordTrace.ts`, and `src/workshop/stages/2-traces.ts` plugs them in.
+
+</Column>
+
+<Column slideOnly>
+
+<AnnotatedCode
+  annotations={[
+    "Runs after every other processor, so it sees what they injected.",
+    "Runs after every model step.",
+  ]}
+  layout="stack"
+>
+```ts title="In src/workshop/stages/2-traces.ts"
+export const stage2: Stage = {
+  stepHooks: [recordStep], // (2)
+  finalInputProcessors: [new ContextRecorder()], // (1)
+};
+```
+</AnnotatedCode>
+
+</Column>
+
+</Slide>
+
+<Slide title="Snapshot the context" hideTitle>
+
+<Column slideOnly>
+
+## Snapshot the context
+
+`ContextRecorder` is an input processor. Before each model call, it reads every message in the message list, writes the conversation to the graph as `Message` nodes, and notes which ones are about to be sent.
+
+It also records any system messages that were injected, such as pinned rules in a later stage, so the trace shows them too.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In recordTrace.ts"
+export class ContextRecorder implements Processor {
+  id = "context-recorder";
+  async processInputStep({ messageList }: ProcessInputStepArgs) {
+    if (!config.traces) return;
+    const all = messageList.get.all.db();
+    // ...write Message and ToolCall nodes, remember which were in context
+    runtime.pendingContexts.push({ messageIds: all.map((m) => m.id), systemMessageIds: sys.map((s) => s.id) });
+  }
+}
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Write the step" hideTitle>
+
+<Column slideOnly>
+
+## Write the step
+
+`recordStep` runs from `onStepFinish`. It takes the snapshot that `ContextRecorder` left behind and writes one `Step` node, with `HAD_IN_CONTEXT` edges to every message in it and `REQUESTED` edges to the tool calls the model made.
+
+The `traces` flag guards both, so switching it off stops recording without touching the agent.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In recordTrace.ts"
+export async function recordStep(step: any): Promise<void> {
+  if (!config.traces) return;
+  const ctx = runtime.pendingContexts.shift() ?? { messageIds: [], systemMessageIds: [] };
+  // ...build ToolCall rows from step.toolCalls and step.toolResults
+  await writeStep({ sessionId: runtime.sessionId, n: ++runtime.step, messageIds: ctx.messageIds, calls /* ... */ });
+}
+```
+
+</Column>
+
+</Slide>
+
+<Slide title="Flip the flag" hideTitle>
+
+<Column slideOnly>
+
+## Flip the flag
+
+Set `traces` to `true`, or apply the stage 2 preset, which keeps `history` on and adds `traces`.
+
+Flags other than `history` and `historyWindow` are read when a message is handled, but a restart gives you a clean session.
+
+</Column>
+
+<Column slideOnly>
+
+```ts title="In workshop.config.ts"
+// STAGE 2: context traces. true = onStepFinish writes Step nodes and HAD_IN_CONTEXT edges to Neo4j.
+traces: true,
+```
+
+```bash title="Or apply the preset, then restart"
+npm run step -- 2
+npm run reset
+npm run chat
+```
+
+</Column>
+
+</Slide>

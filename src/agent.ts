@@ -7,7 +7,7 @@
 // The stage code lives in src/workshop/stages/.
 // ─────────────────────────────────────────────────────────────────────────────
 import { Agent } from "@mastra/core/agent";
-import { MODEL } from "./workshop/env.js";
+import { MODEL, modelConfig } from "./workshop/env.js";
 import { makeRunTurn } from "./workshop/turn.js";
 import * as s from "./workshop/stages/index.js";
 
@@ -42,7 +42,7 @@ export const agent = new Agent({
   name: "Workshop Agent",
   description: "A personal assistant for email, calendar and tickets, used to teach context engineering.",
   instructions,
-  model: MODEL as any,
+  model: modelConfig(MODEL),
   tools,
   memory,
   inputProcessors,

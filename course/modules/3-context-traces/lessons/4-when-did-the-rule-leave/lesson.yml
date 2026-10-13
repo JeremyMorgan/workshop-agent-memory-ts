@@ -1,0 +1,20 @@
+title: When Did the Rule Leave?
+type: challenge
+order: 4
+duration: 5
+summary: >-
+  In this challenge, you proved when the rule left the context:
+
+
+  - You queried `ruleInContextByStep` and found the step where
+  `ruleInContext` flipped from `true` to `false`
+
+  - You ran `ruleAtFirstDelete` and compared the last step with the rule to
+  the first `delete_email` step
+
+  - You confirmed that the rule had left the context before the agent deleted
+  anything
+
+
+  In the next module, you stop depending on the window by storing what the
+  user says as long-term memory.

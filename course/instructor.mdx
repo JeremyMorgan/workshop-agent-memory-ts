@@ -1,0 +1,102 @@
+This guide is for facilitators of the Agent Memory Workshop (Mastra and TypeScript), a 180-minute instructor-led session on context engineering through agent memory.
+
+Learners start with a deliberately broken email, calendar and ticket agent and add one capability per stage, each fixing a failure they can reproduce. The workshop ends with a context pipeline they make their own.
+
+## Prerequisites
+
+Learners need Node 22.13+, npm, Docker for Neo4j, and a workshop API key in `.env`. They should be comfortable reading TypeScript and basic Cypher.
+
+## Learning objectives
+
+- Context engineering: the model only knows what is in its window, and the engineer decides what goes in
+- How Mastra message history and a window size lose a rule
+- How context traces in Neo4j show what the model saw at every step
+- How long-term memory and pinned rules persist facts across sessions
+- How graph retrieval follows relationships that semantic recall cannot
+- How guards, provenance and a trust filter make an agent safe when its memory is not
+
+## Resources
+
+- The workshop repository, `neo4j-graphacademy/workshop-agent-memory-ts`
+- [Context Graphs: Agent Memory with Neo4j](/courses/genai-context-graphs)
+- [Neo4j Agent Memory Service (NAMS)](https://memory.neo4jlabs.com), and the [Labs documentation](https://neo4j.com/labs/agent-memory/)
+- The Python version, [Neo4j Agent Memory Workshop](/courses/workshop-agent-memory)
+
+## Preparation
+
+1. Run the workshop yourself, start to finish, before delivering it
+1. Run `npm i`, `npm run neo4j:up`, and `npm run scenario -- N --replay` for N from 0 to 6, to confirm the recordings play without a model or Neo4j
+1. Run the live scenarios for stages 1 to 6 once with your key. Prompts are model-dependent, so recheck them if `MODEL` has changed
+1. Have `npm run reset` ready between demos
+
+Models: the agent model is set by `MODEL` in `.env`. The poisoning demo (scenario 6) runs on the same model. Some models refuse to act on instructions in an email, so `POISON_MODEL` overrides it for that scenario only.
+
+## Timing
+
+| Module | Minutes | Run | Fallback if the model misbehaves |
+| --- | --- | --- | --- |
+| 1. Context engineering and the loop | 20 | `npm run step -- 0`, then `npm run chat`, `/new`, `npm run state` | `npm run scenario -- 0 --replay` |
+| 2. Short-term memory | 20 | open with `npm run scenario -- 1` (demo), then `npm run step -- 1` and restart for the code lesson | `npm run scenario -- 1 --replay` |
+| 3. Context traces | 25 | `npm run step -- 2`, `npm run scenario -- 2`, `npm run query -- ruleAtFirstDelete` | `npm run scenario -- 2 --replay` |
+| 4. Long-term memory | 30 | `npm run step -- 3`, `npm run scenario -- 3` | `npm run scenario -- 3 --replay` |
+| Break | 10 | | |
+| 5. Retrieval | 25 | `npm run step -- 4`, `npm run ingest`, `npm run scenario -- 4` | `npm run scenario -- 4 --replay` |
+| 6. Safety and trust | 20 | `npm run step -- 5`, `npm run scenario -- 5`, then `npm run scenario -- 6` | `npm run scenario -- 5 --replay`, `npm run scenario -- 6 --replay` |
+| 7. Make it yours | 30 | `npm run step -- 6`, `npm run chat`, `npm run state` | none, the build is live |
+
+Total: 180 minutes. Module 7 breaks down as 7 to pick a path (including the callback), 18 to build, and 5 for show and tell and what's next.
+
+## Catching learners up
+
+Anyone who falls behind can jump to the start of a module with a preset. Presets are all-or-nothing, so a preset also turns on the flags for earlier stages.
+
+| Starting module | Command |
+| --- | --- |
+| 1 | `npm run step -- 0` |
+| 2 | `npm run step -- 1` |
+| 3 | `npm run step -- 2` |
+| 4 | `npm run step -- 3` |
+| 5 | `npm run step -- 4` |
+| 6 | `npm run step -- 5` (use `npm run step -- 6` for the poisoning demo) |
+| 7 | `npm run step -- 6` |
+
+Add `--replay` to any `npm run scenario -- N` to replay a recording with no model and no Neo4j. Run `npm run reset` to restore the fake apps, the audit log, history and the graph.
+
+## Module 6 and 7 notes
+
+### Story cues
+
+Module 6 opens with three short stories, told before any code. Each ends on a pivot line. Keep to the timing so the code lesson still fits.
+
+| Beat | About | Story | Pivot |
+| --- | --- | --- | --- |
+| 1 | 1 min | Replit: a code freeze that was only a written instruction, and the later automatic separation of development and production databases | "If it matters, enforce it in code." |
+| 2 | 1 min | OpenClaw and iMessage, reportedly covered by Bloomberg, with more than 500 unsolicited messages | "Our recipient allowlist is the same lesson in a few lines of code." |
+| 3 | 2 min | Memory as an attack surface: Rehberger against ChatGPT (2024) and Gemini (early 2025), MemGhost (2026), and an agent defending its false beliefs | "Our Acme email does exactly this. The fix is knowing where every memory came from." |
+
+Module 7 lesson 1 opens with the callback, "Yue's inbox, replayed with everything you've built", for about 2 minutes. Its pivot is "You didn't build memory. You built a context pipeline. Now point it at something real." Hand straight over to the three paths.
+
+Speaker notes in the lesson source carry the sources:
+
+- Replit: eweek.com/news/replit-ai-coding-assistant-failure/, incidentdatabase.ai, bytebase.com/blog/how-to-prevent-ai-agent-from-dropping-your-production-database/, dev.to/joylo/why-replits-ai-agent-deleted-a-production-database-389p
+- iMessage incident: online91.thedailystar.net/tech-startup/news/openclaw-goes-rogue-meta-exec-deletes-emails-without-permission-4113741, which references the Bloomberg report
+- Gemini memory attack: Ars Technica via tagteam.harvard.edu (Feb 2025) and infoq.com/news/2025/02/gemini-long-term-memory-attack/
+- ChatGPT SpAIware and later memory-poisoning research: akto.io/blog/memory-poisoning-ai-agents
+- MemGhost: Cloud Security Alliance research note, 23 July 2026, labs.cloudsecurityalliance.org
+- Yue incident: simonwillison.net/2026/feb/23/summer-yue
+
+Verify names, dates and figures against the sources before putting them on a slide. The iMessage incident comes from secondary write-ups, so say "reportedly".
+
+### Demo tips
+
+- Scenario 5: read the harness lines (`HARNESS inbox`, the audit log), not the agent's summary. The inbox stays at 40 until the harness approves, then goes to 30.
+- Scenario 6: the attack is not perfectly deterministic. If the model does not store the planted line, say so and replay the recording.
+- Module 7: circulate. Most learners re-point one or two pieces. That is a good outcome.
+
+## Close
+
+Return to the introduction slides and run Q&A. Point learners to [Context Graphs: Agent Memory with Neo4j](/courses/genai-context-graphs) as the natural next step, and to the [TypeScript MCP tools course](/courses/genai-mcp-build-custom-tools-typescript).
+
+Remind learners they can try NAMS at [memory.neo4jlabs.com](https://memory.neo4jlabs.com). It is a Neo4j Labs project, so describe it as such.
+
+Repeat the blog invitation: learners who write up what they built can send it to you, to be featured on the GraphAcademy blog.

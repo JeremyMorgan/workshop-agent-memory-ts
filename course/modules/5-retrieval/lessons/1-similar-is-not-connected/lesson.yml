@@ -1,0 +1,21 @@
+title: Similar Is Not Connected
+type: lesson
+order: 1
+duration: 6
+summary: >-
+  In this lesson, you met a question that similarity cannot answer:
+
+
+  - You asked who to chase before Tuesday's billing review, and saw flat search
+  return everything that sounds like the question
+
+  - You saw that Sam, who owns the blocking migration, never appears in text
+  that mentions billing, exports, or reviews
+
+  - You followed the relationship path that does find him: event, ticket,
+  blocking ticket, owner
+
+  - You loaded the same data into a graph with `npm run ingest`
+
+
+  In the next lesson, you build the flat semantic baseline.

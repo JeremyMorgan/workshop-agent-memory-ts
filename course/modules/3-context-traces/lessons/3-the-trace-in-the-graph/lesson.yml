@@ -1,0 +1,22 @@
+title: The Trace in the Graph
+type: lesson
+order: 3
+duration: 7
+summary: >-
+  In this lesson, you explored the trace in Neo4j:
+
+
+  - You ran the stage 2 scenario, which repeats the five-turn failure with
+  traces on
+
+  - You viewed the `Session`, `Step`, `Message` and `ToolCall` nodes in the
+  Neo4j Browser
+
+  - You listed every step with `npm run query -- stepContext`
+
+  - You set the agent's own summary beside the harness audit log, and saw
+  where they could differ
+
+
+  In the next lesson, you ask the graph exactly when the rule left the
+  context.

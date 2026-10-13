@@ -1,0 +1,18 @@
+title: Semantic Recall Baseline
+type: lesson
+order: 2
+duration: 5
+summary: >-
+  In this lesson, you ran the flat baseline:
+
+
+  - You learned that the index is a custom one, built on `@mastra/fastembed`
+  with cosine similarity, and not Mastra's `semanticRecall`
+
+  - You set `retrieval` to `semantic` and saw the top 4 chunks injected as a
+  system message
+
+  - You asked the billing question and saw an answer without Sam
+
+
+  In the next lesson, you add the graph side.
