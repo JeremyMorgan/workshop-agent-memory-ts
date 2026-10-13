@@ -2,6 +2,10 @@ import { config as loadEnv } from "dotenv";
 import { join } from "node:path";
 import { ROOT } from "./paths.js";
 
+// dotenv never overrides existing vars, and the devcontainer's remoteEnv exports unset host vars as "".
+// Drop empty ones so values from .env still apply.
+for (const [k, v] of Object.entries(process.env)) if (v === "") delete process.env[k];
+
 loadEnv({ path: join(ROOT, ".env"), quiet: true });
 
 export const MODEL = process.env.MODEL || "openai/gpt-5.4-mini";
