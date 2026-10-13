@@ -7,8 +7,11 @@ import { formatAudit, readAudit } from "./nsuite/audit.js";
 import { loadState } from "./nsuite/state.js";
 import { approvals } from "./processors/approvalGate.js";
 import { newSession } from "./runtime.js";
+import { assertPreflight } from "./preflight.js";
 import { out, printStep } from "./ui.js";
 import { randomUUID } from "node:crypto";
+
+await assertPreflight();
 
 const startSession = () => {
   const id = `s-${randomUUID().slice(0, 8)}`;

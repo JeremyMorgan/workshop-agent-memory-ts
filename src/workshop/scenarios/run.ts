@@ -39,6 +39,8 @@ const { resetAll } = await import("../harness/reset.js");
 const { closeDriver } = await import("../graph/driver.js");
 const { makeCtx } = await import("./ctx.js");
 const { MODEL } = await import("../env.js");
+const { assertPreflight } = await import("../preflight.js");
+await assertPreflight();
 
 if (!flags.has("--no-preset")) {
   applyPresetInMemory(scenario.preset ?? scenario.stage);

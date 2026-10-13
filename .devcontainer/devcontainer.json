@@ -4,10 +4,10 @@
   "service": "workspace",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "shutdownAction": "stopCompose",
-  "forwardPorts": [7474, 7687, 4111],
+  "forwardPorts": ["neo4j:7474", "neo4j:7687", 4111],
   "portsAttributes": {
-    "7474": { "label": "Neo4j Browser", "onAutoForward": "notify" },
-    "7687": { "label": "Neo4j Bolt", "onAutoForward": "silent" },
+    "neo4j:7474": { "label": "Neo4j Browser", "onAutoForward": "notify" },
+    "neo4j:7687": { "label": "Neo4j Bolt", "onAutoForward": "silent" },
     "4111": { "label": "Mastra Studio (npm run dev)", "onAutoForward": "notify" }
   },
   "containerEnv": {
