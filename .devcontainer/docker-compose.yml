@@ -14,7 +14,7 @@ services:
     image: neo4j:5-community
     environment:
       NEO4J_AUTH: neo4j/workshop-password
-      NEO4J_server_http_enabled__modules: "TRANSACTIONAL_ENDPOINTS,UNMANAGED_EXTENSIONS,BROWSER,QUERY_API_ENDPOINTS"
+      #NEO4J_server_http_enabled__modules: "TRANSACTIONAL_ENDPOINTS,UNMANAGED_EXTENSIONS,BROWSER,QUERY_API_ENDPOINTS"
     ports:
       - "7474:7474"
       - "7687:7687"
