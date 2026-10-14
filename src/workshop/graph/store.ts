@@ -1,5 +1,6 @@
 // Small write/read helpers over the graph. Keeping Cypher here keeps hooks and processors readable.
 import { run } from "./driver.js";
+import { USER_ID } from "./pole.js";
 
 export interface RuleRow { key: string; tool: string; mode: string; source: string; turn: number; text?: string }
 export interface FactRow { text: string; source: string | null; trust: string | null; emailId?: string | null }
@@ -18,10 +19,12 @@ export const upsertMessage = (m: { id: string; role: string; text: string; turn:
 export async function upsertRule(r: { tool: string; mode: string; source: string; turn: number; text?: string; messageId?: string }) {
   await run(
     `MERGE (r:Rule {key:$key}) SET r.tool=$tool, r.mode=$mode, r.source=$source, r.turn=$turn, r.text=$text
+     MERGE (u:User {id:$userId})
+     MERGE (u)-[:HAS_RULE]->(r)
      WITH r
      OPTIONAL MATCH (m:Message {id:$messageId})
      FOREACH (_ IN CASE WHEN m IS NULL THEN [] ELSE [1] END | MERGE (r)-[:STATED_IN]->(m))`,
-    { ...r, key: `${r.tool}:${r.mode}`, text: r.text ?? null, messageId: r.messageId ?? null },
+    { ...r, userId: USER_ID, key: `${r.tool}:${r.mode}`, text: r.text ?? null, messageId: r.messageId ?? null },
   );
 }
 
