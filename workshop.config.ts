@@ -55,7 +55,7 @@ export const config: WorkshopConfig = {
   // STAGE 3: inject every Rule node from the graph into the context at every step.
   pinnedRules: false,
 
-  // STAGE 3: onboarding. The agent asks who you are (name, where you live, a fun fact) and pins what it knows about you.
+  // STAGE 3: onboarding. The agent asks who you are (name, where you live, preferred language, a fun fact) and pins what it knows about you.
   onboarding: false,
 
   // STAGE 4: retrieval before each answer. "none" | "semantic" | "graph" | "both"

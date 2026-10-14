@@ -7,7 +7,7 @@ import { runtime } from "../runtime.js";
 
 export const TAG = "about-user";
 
-export const ONBOARDING_NUDGE = `You have not met this user yet. Greet them briefly and ask their name, where they live and one fun fact about them, then still help with whatever they asked. Ask once only: when they have answered (or declined) carry on normally.`;
+export const ONBOARDING_NUDGE = `You have not met this user yet. Greet them briefly and ask their name, where they live, which language they would like you to reply in and one fun fact about them, then still help with whatever they asked. Ask once only: when they have answered (or declined) carry on normally.`;
 
 export const isKnown = (p: UserProfile | null): p is UserProfile =>
   !!p && !!(p.name || p.funFact || p.preferences?.length || p.links.length);

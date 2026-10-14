@@ -206,6 +206,7 @@ test("about-user block renders the profile; an empty profile is not known", () =
   assert.equal(isKnown(null), false);
   assert.equal(isKnown({ name: null, funFact: null, preferences: [], links: [] }), false);
   assert.match(ONBOARDING_NUDGE, /where they live/);
+  assert.match(ONBOARDING_NUDGE, /language/);
 });
 
 test("POLE+O schema accepts known types and rejects unknown ones", () => {

@@ -15,7 +15,7 @@ export const poleSchema = z.object({
   user: z.object({
     name: z.string().nullish().describe("The user's own name, if they gave it"),
     funFact: z.string().nullish().describe("A fun fact the user shared about themselves"),
-    preferences: z.array(z.string()).describe("Preferences the user stated about how they like things done"),
+    preferences: z.array(z.string()).describe("Preferences the user stated about how they like things done, including the language they want replies in (e.g. \"replies in Spanish\")"),
   }),
   entities: z.array(z.object({
     type: z.enum(POLE_TYPES),

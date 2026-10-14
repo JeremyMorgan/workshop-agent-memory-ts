@@ -175,7 +175,7 @@ Stop depending on the window. Persist what the user states (facts and rules) and
 - `extractUserStatements`: one structured-output (zod) LLM call per user turn → `Rule` and `Fact` nodes.
 - `mapToolResults`: deterministic mappers (no LLM) → `Email`, `Event`, `Issue`, `Person` nodes and relationships.
 - `pinnedRules`: every `Rule` is injected as a system message at every step.
-- `onboarding`: the agent asks who you are (name, where you live, a fun fact) and pins what it knows about you in every step.
+- `onboarding`: the agent asks who you are (name, where you live, preferred language, a fun fact) and pins what it knows about you in every step.
 
 The extractor understands POLE+O (Person, Object, Location, Event, Organization). What you say about yourself becomes a `User` node (`name`, `funFact`, `preferences` as a list), and anything you mention becomes an entity linked to it, for example `(User)-[:LIVES_IN]->(Location)`. Every entity carries a POLE+O label: tool results too (`Email` and `Issue` nodes are also `:Object`; `Event` and `Person` already are). `Fact`, `Rule` and `User` are not entities and have no POLE+O label.
 
@@ -190,7 +190,7 @@ Part 1 is the stage 1 script again. Part 2 is a warm-up run. Part 3 is a fresh s
 npm run step -- 3
 npm run chat
 ```
-Say hi. The agent asks your name, where you live and a fun fact. Answer, for example *"I'm Sam, I live in Leeds, I like short summaries, and I once rode a camel"*. Type `/new`, then ask *"what do you know about me?"*: the new session recalls it from the graph, with no history. The scripted scenarios turn onboarding off.
+Say hi. The agent asks your name, where you live, which language you want replies in and a fun fact. Answer, for example *"I'm Sam, I live in Leeds, reply in English, I like short summaries, and I once rode a camel"*. Type `/new`, then ask *"what do you know about me?"*: the new session recalls it from the graph, with no history. The scripted scenarios turn onboarding off.
 
 ### What to look for
 Part 1: the agent only **suggests** deletions. Part 3: the answer uses facts persisted in Part 2.
