@@ -26,6 +26,11 @@
     "OPENAI_BASE_URL": "${localEnv:OPENAI_BASE_URL}",
     "MODEL": "${localEnv:MODEL}"
   },
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["README.md", "NEO4J_BROWSER_LINK.txt"]
+    }
+  },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "vscode": { "extensions": ["dbaeumer.vscode-eslint", "neo4j-extensions.neo4j-for-vscode"] }
