@@ -20,3 +20,8 @@ if [ -z "${OPENAI_API_KEY:-}" ] && ! grep -qE '^OPENAI_API_KEY=.+' .env; then
   echo "NOTE: OPENAI_API_KEY is not set. Add it to .env (or export it on your host and rebuild) before 'npm run chat'."
 fi
 echo "Ready. Try: npm run chat"
+
+HOST="${CODESPACE_NAME}-7474.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
+URL="https://${HOST}/browser/?connectURL=https://neo4j@${HOST}:443&db=neo4j"
+printf '\nNeo4j Browser (password: workshop-password):\n  %s\n\n' "$URL"
+printf '%s\n' "$URL" > NEO4J_BROWSER_LINK.txt
