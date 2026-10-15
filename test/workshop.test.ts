@@ -6,13 +6,14 @@ import { config, allowedRecipients } from "../workshop.config.js";
 import { loadSeed, loadState, resetState, seedText, withWeekday } from "../src/workshop/nsuite/state.js";
 import { STATE_FILE } from "../src/workshop/paths.js";
 import { checkSeed } from "../src/workshop/nsuite/seedCheck.js";
-import { applyDelta, mapToolResult, POLE_LABEL } from "../src/workshop/hooks/mapToolResults.js";
+import { applyDelta, mapToolResult, POLE_LABEL, SUBTYPE_LABEL } from "../src/workshop/hooks/mapToolResults.js";
 import { approvals, checkApproval } from "../src/workshop/processors/approvalGate.js";
 import { checkRecipient } from "../src/workshop/processors/recipientAllowlist.js";
 import { filterFacts, isSensitiveQuestion } from "../src/workshop/processors/trustFilter.js";
 import { resolveProvenance } from "../src/workshop/graph/provenance.js";
 import { renderRules } from "../src/workshop/processors/pinnedRules.js";
 import { renderGraphContext } from "../src/workshop/processors/graphContext.js";
+import { checkCypher } from "../src/workshop/tools/graph.js";
 import { presets, rewriteConfigSource } from "../src/workshop/harness/presets.js";
 import { execute, specs } from "../src/workshop/tools/index.js";
 import { runtime } from "../src/workshop/runtime.js";
@@ -20,6 +21,8 @@ import { runGuards, installGuards, clearGuards } from "../src/workshop/tools/gua
 import { appendAudit, readAudit } from "../src/workshop/nsuite/audit.js";
 import { renderAbout, isKnown, ONBOARDING_NUDGE } from "../src/workshop/processors/aboutUser.js";
 import { poleSchema, resolveRelations, keyOf } from "../src/workshop/graph/pole.js";
+import { buildExtractionSchema, ontology, renderOntologyForPrompt, validateOntology } from "../src/workshop/graph/ontology.js";
+import { renderApocSchema, renderOntologySchema } from "../src/workshop/graph/schema.js";
 void applyDelta;
 
 // ── seed and state ──────────────────────────────────────────────────────────
@@ -107,6 +110,56 @@ test("mapper: emails link sender to known people only; unknown tools map to noth
   assert.equal(d.nodes.filter((n) => n.label === "Email").length, 40);
   assert.ok(d.rels.some((r) => r.type === "SENT_BY" && r.to.key === "Sam"));
   assert.deepEqual(mapToolResult("remember_fact", { remembered: true }), { nodes: [], rels: [] });
+});
+
+test("mapper: an email names a customer and project, and the project leads to its tickets", async () => {
+  const seed = loadSeed();
+  const mail = (await execute(specs.read_email, { id: "e-038" })).result;
+  const d = mapToolResult("read_email", mail, seed.people, seed);
+  const rels = d.rels.map((r) => `${r.from.key} ${r.type} ${r.to.key}`);
+  assert.ok(rels.includes("e-038 MENTIONS Contoso"));
+  assert.ok(rels.includes("Atlas FOR Contoso") && rels.includes("ENG-142 PART_OF Atlas"));
+  assert.ok(!rels.some((r) => r.includes("MENTIONS Fabrikam")), "an email only mentions what its text names");
+  // Without the dictionaries the mapper does what it did before: no customers, no projects.
+  assert.ok(!mapToolResult("read_email", mail, seed.people).rels.some((r) => r.type === "MENTIONS"));
+});
+
+test("mapper: Dana works for Contoso by email domain, and tickets join their project", async () => {
+  const seed = loadSeed();
+  const dana = (await execute(specs.read_email, { id: "e-011" })).result;
+  const rels = mapToolResult("read_email", dana, seed.people, seed).rels.map((r) => `${r.from.key} ${r.type} ${r.to.key}`);
+  assert.ok(rels.includes("Dana WORKS_FOR Contoso"));
+  assert.ok(!rels.some((r) => r.includes("MENTIONS")), "Dana's emails never name a customer or project");
+  const issue = mapToolResult("get_issue", (await execute(specs.get_issue, { id: "ENG-142" })).result, seed.people, seed).rels.map((r) => `${r.from.key} ${r.type} ${r.to.key}`);
+  assert.ok(issue.includes("ENG-142 PART_OF Atlas") && issue.includes("Atlas FOR Contoso"));
+});
+
+test("graph context renders customers, projects and the meeting a ticket came up in", () => {
+  const text = renderGraphContext(
+    [{
+      issue: { id: "ENG-142", title: "Billing export fails", status: "in_progress" }, issueOwner: "Priya", project: "Atlas", customer: "Contoso",
+      meetings: [{ title: "Billing review", day: "Tuesday", time: "14:00", attendees: ["Priya", "Dana"] }],
+      blocker: { id: "ENG-139", title: "Migrate invoices table", eta: "2025-06-12" }, blockerOwner: "Sam",
+    }],
+    { customers: [{ customer: "Contoso", contacts: ["Dana"], projects: ["Atlas"] }], emails: [{ id: "e-038", subject: "Invoice INV-2041 is 38 days past due", mentions: ["Contoso", "Atlas"] }] },
+  );
+  assert.match(text, /Email e-038.*mentions Contoso, Atlas/);
+  assert.match(text, /Customer Contoso: contacts Dana; projects Atlas/);
+  assert.match(text, /ENG-142.*project Atlas \(Contoso\).*Discussed in: Billing review \(Tuesday 14:00\)/);
+  assert.match(text, /BLOCKED BY ENG-139.*owner Sam.*ETA Thursday 2025-06-12/s, "a bare ISO date gets its weekday from code");
+  assert.equal(renderGraphContext([]), "", "nothing linked means no context message");
+});
+
+test("query_graph: only one read-only query over the data graph gets through", () => {
+  assert.equal(checkCypher("MATCH (i:Issue) WHERE NOT EXISTS { (:Event)-[:ABOUT]->(i) } RETURN i.id"), null);
+  assert.equal(checkCypher("MATCH (i:Issue) WHERE i.title CONTAINS 'set up' RETURN i.id;"), null, "words inside strings are not keywords");
+  assert.match(checkCypher("MATCH (i:Issue) DETACH DELETE i")!, /read-only/);
+  assert.match(checkCypher("MATCH (i:Issue) SET i.status = 'done'")!, /read-only/);
+  assert.match(checkCypher("MATCH (f:Fact) RETURN f.text")!, /Fact label/);
+  assert.match(checkCypher("MATCH (r:Rule) RETURN r")!, /Rule label/);
+  assert.match(checkCypher("MATCH (i:Issue) RETURN i; MATCH (n) DETACH DELETE n")!, /one statement/i);
+  assert.match(checkCypher("CALL db.labels()")!, /start with/);
+  assert.match(checkCypher("  ")!, /No query/);
 });
 
 // ── gates ───────────────────────────────────────────────────────────────────
@@ -216,6 +269,57 @@ test("POLE+O schema accepts known types and rejects unknown ones", () => {
   assert.equal(poleSchema.safeParse({ ...ok, relations: [{ from: "user", type: "DROP_ALL", to: "Leeds" }] }).success, false);
 });
 
+test("entities carry a subtype that must belong to their type", () => {
+  const base = { user: { preferences: [] }, relations: [] };
+  assert.equal(poleSchema.safeParse({ ...base, entities: [{ type: "Person", subtype: "Employee", name: "Priya" }] }).success, true);
+  assert.equal(poleSchema.safeParse({ ...base, entities: [{ type: "Person", name: "Priya" }] }).success, true);
+  assert.equal(poleSchema.safeParse({ ...base, entities: [{ type: "Person", subtype: "Customer", name: "Priya" }] }).success, false);
+  assert.equal(poleSchema.safeParse({ ...base, entities: [{ type: "Person", subtype: "Wizard", name: "Priya" }] }).success, false);
+});
+
+test("the extraction schema and prompt follow the ontology, so a new subtype needs no other change", () => {
+  const o = structuredClone(ontology);
+  o.entities.Person.subtypes.Contractor = "Paid by the hour";
+  const schema = buildExtractionSchema(validateOntology(o));
+  assert.equal(schema.safeParse({ user: { preferences: [] }, relations: [], entities: [{ type: "Person", subtype: "Contractor", name: "Sam" }] }).success, true);
+  assert.match(renderOntologyForPrompt(o), /Contractor: Paid by the hour/);
+  assert.match(renderOntologyForPrompt(), /Employee/);
+});
+
+test("an ontology with unsafe or clashing names is rejected", () => {
+  const withType = (t: string) => ({ ...ontology, entities: { ...ontology.entities, [t]: { description: "x", subtypes: {} } } });
+  assert.throws(() => validateOntology(withType("Bad Label) DETACH DELETE n //")), /letters, numbers/);
+  assert.throws(() => validateOntology(withType("Fact")), /used by the workshop/);
+  assert.throws(() => validateOntology({ ...ontology, entities: { ...ontology.entities, Location: { description: "x", subtypes: { Person: "clashes with a type" } } } }), /defined twice/);
+  assert.throws(() => validateOntology({ ...ontology, relations: { ...ontology.relations, bad: { description: "x", from: [], to: [] } } }), /UPPER_SNAKE_CASE/);
+  assert.throws(() => validateOntology({ ...ontology, relations: { X: { description: "x", from: ["Planet"], to: [] } } }), /not an entity type/);
+});
+
+test("every tool-result label is a type or subtype in the ontology", () => {
+  const known = new Set([...Object.keys(ontology.entities), ...Object.values(ontology.entities).flatMap((e) => Object.keys(e.subtypes))]);
+  for (const [label, pole] of Object.entries(POLE_LABEL)) {
+    assert.ok(known.has(pole), pole);
+    if (label !== pole) assert.ok(known.has(label), `${label} should be a subtype in ontology.ts`);
+  }
+  for (const sub of Object.values(SUBTYPE_LABEL)) assert.ok(known.has(sub!), sub);
+});
+
+test("the graph schema is rendered from APOC output, hides agent memory, and falls back to the ontology", () => {
+  const meta: any = {
+    Person: { type: "node", properties: { name: { type: "STRING" } }, relationships: { WORKS_AT: { direction: "out", labels: ["Organization"] }, ABOUT: { direction: "in", labels: ["Event"] } } },
+    Organization: { type: "node", properties: { name: { type: "STRING" } }, relationships: {} },
+    Fact: { type: "node", properties: { text: { type: "STRING" } }, relationships: {} },
+    WORKS_AT: { type: "relationship" },
+  };
+  const text = renderApocSchema(meta);
+  assert.match(text, /\(:Person \{name\}\)/);
+  assert.match(text, /\(:Person\)-\[:WORKS_AT\]->\(:Organization\)/);
+  assert.doesNotMatch(text, /Fact/);
+  assert.doesNotMatch(text, /ABOUT/);
+  assert.equal(renderApocSchema({}), "");
+  assert.match(renderOntologySchema(), /\(:Person:Employee\)/);
+});
+
 test("relations resolve to typed endpoints; unknown endpoints are dropped; people share the first-name key", () => {
   const entities = [{ type: "Location" as const, name: "Leeds" }, { type: "Person" as const, name: "Priya Shah" }];
   const rels = resolveRelations(entities, [
@@ -234,5 +338,5 @@ test("presets: onboarding arrives with stage 3", () => {
 });
 
 test("every tool-result label maps to a POLE+O label", () => {
-  assert.deepEqual(POLE_LABEL, { Email: "Object", Event: "Event", Issue: "Object", Person: "Person" });
+  assert.deepEqual(POLE_LABEL, { Email: "Object", Event: "Event", Issue: "Object", Person: "Person", Customer: "Organization", Project: "Object" });
 });

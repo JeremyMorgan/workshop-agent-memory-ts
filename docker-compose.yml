@@ -8,6 +8,8 @@ services:
       - "7687:7687"
     environment:
       NEO4J_AUTH: neo4j/workshop-password
+      NEO4J_PLUGINS: '["apoc"]'   # downloaded on first start; query_graph reads the schema with apoc.meta.schema()
+      NEO4J_dbms_security_procedures_allowlist: "apoc.meta.*,apoc.version"
       NEO4J_server_memory_heap_initial__size: 512m
       NEO4J_server_memory_heap_max__size: 1G
     volumes:

@@ -1,12 +1,12 @@
-# Dev container: a Node workspace plus Neo4j on the same network (the app reaches it at bolt://neo4j:7687).
+# Dev container: a Node workspace plus Neo4j. The workspace shares Neo4j's network namespace, so Neo4j is at
+# localhost:7687 / localhost:7474 inside the workspace and the editor can forward those ports (locally and in Codespaces).
 services:
   workspace:
     image: mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm
     volumes:
       - ..:/workspaces/agent-memory-workshop:cached
     command: sleep infinity
-    ports:
-      - "4111:4111"   # Mastra Studio (npm run dev); MASTRA_HOST=0.0.0.0 is set in devcontainer.json
+    network_mode: service:neo4j
     depends_on:
       neo4j:
         condition: service_healthy
@@ -14,9 +14,12 @@ services:
     image: neo4j:5-community
     environment:
       NEO4J_AUTH: neo4j/workshop-password
+      NEO4J_PLUGINS: '["apoc"]'   # downloaded on first start; query_graph reads the schema with apoc.meta.schema()
+      NEO4J_dbms_security_procedures_allowlist: "apoc.meta.*,apoc.version"
     ports:
       - "7474:7474"
       - "7687:7687"
+      - "4111:4111"   # Mastra Studio (npm run dev), published here because the workspace shares this network
     volumes:
       - neo4j-data:/data
     healthcheck:

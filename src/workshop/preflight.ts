@@ -1,5 +1,5 @@
 import "./env.js";
-import { getDriver } from "./graph/driver.js";
+import { getDriver, run } from "./graph/driver.js";
 
 /** Fail fast with actionable messages before any agent or graph code runs. Returns the list of problems. */
 export async function preflight(): Promise<string[]> {
@@ -29,6 +29,13 @@ export async function preflight(): Promise<string[]> {
         ? `Neo4j at ${uri} rejected NEO4J_USERNAME/NEO4J_PASSWORD. Check them in .env.`
         : `Cannot reach Neo4j at ${uri} (${(e as Error).message}). Is it running? Try: npm run neo4j:up`,
     );
+  }
+  if (!problems.length) {
+    try {
+      await run("RETURN apoc.version() AS v");
+    } catch {
+      problems.push("APOC is not installed on Neo4j (query_graph reads the graph schema with it). With the workshop compose file run: docker compose up -d --force-recreate. On Aura, APOC is already there.");
+    }
   }
   return problems;
 }

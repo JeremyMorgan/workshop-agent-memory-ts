@@ -3,11 +3,11 @@
 // strategies see the same data.
 import { closeDriver } from "../graph/driver.js";
 import { applyDelta, mapToolResult } from "../hooks/mapToolResults.js";
-import { loadState } from "../nsuite/state.js";
+import { loadSeed, loadState } from "../nsuite/state.js";
 import { specs } from "../tools/index.js";
 
 export async function ingestSeed() {
-  const people = loadState().people;
+  const world = loadSeed(); // static dictionaries: people, customers, projects
   const days = [...new Set(loadState().events.map((e) => e.day))];
   const calls: [string, unknown][] = [
     ["list_emails", await specs.list_emails.mock({})],
@@ -16,7 +16,7 @@ export async function ingestSeed() {
     ["list_issues", await specs.list_issues.mock({})],
     ...(await Promise.all(days.map(async (d) => ["get_events", await specs.get_events.mock({ date: d })] as [string, unknown]))),
   ];
-  for (const [tool, output] of calls) await applyDelta(mapToolResult(tool, output, people));
+  for (const [tool, output] of calls) await applyDelta(mapToolResult(tool, output, world.people, world));
   return calls.length;
 }
 

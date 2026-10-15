@@ -1,34 +1,18 @@
-// POLE+O (Person, Object, Location, Event, Organization) plus the User node, written from what the user says.
-// Labels and relationship types come from the enums below, so interpolating them into Cypher is safe.
-import { z } from "zod";
+// POLE+O entities plus the User node, written from what the user says. What gets extracted is defined in ontology.ts.
+// Labels and relationship types are checked against that ontology (see graph/ontology.ts), so interpolating them into Cypher is safe.
+import type { z } from "zod";
 import { personKey } from "../hooks/mapToolResults.js";
+import { buildExtractionSchema, ontology } from "./ontology.js";
 import { run } from "./driver.js";
-
-export const POLE_TYPES = ["Person", "Object", "Location", "Event", "Organization"] as const;
-export const REL_TYPES = ["LIVES_IN", "WORKS_AT", "KNOWS", "OWNS", "PARTICIPATES_IN", "LOCATED_IN", "RELATED_TO"] as const;
-export type PoleType = (typeof POLE_TYPES)[number];
-export type RelType = (typeof REL_TYPES)[number];
+import { invalidateGraphSchema } from "./schema.js";
 
 export const USER_ID = "workshop-user";
 
-export const poleSchema = z.object({
-  user: z.object({
-    name: z.string().nullish().describe("The user's own name, if they gave it"),
-    funFact: z.string().nullish().describe("A fun fact the user shared about themselves"),
-    preferences: z.array(z.string()).describe("Preferences the user stated about how they like things done, including the language they want replies in (e.g. \"replies in Spanish\")"),
-  }),
-  entities: z.array(z.object({
-    type: z.enum(POLE_TYPES),
-    name: z.string(),
-    description: z.string().nullish(),
-  })).describe("Other things the user mentioned: people, objects, locations, events, organizations. Not the user themself."),
-  relations: z.array(z.object({
-    from: z.string().describe("An entity name, or 'user' for the user"),
-    type: z.enum(REL_TYPES),
-    to: z.string().describe("An entity name"),
-  })),
-});
+/** Built from the participant's ontology.ts: entity types, subtypes and relationship names are all theirs. */
+export const poleSchema = buildExtractionSchema(ontology);
 export type PoleExtraction = z.infer<typeof poleSchema>;
+type PoleType = string;
+type RelType = string;
 
 type Ref = { label: "User" } | { label: PoleType; name: string };
 export interface ResolvedRelation { from: Ref; type: RelType; to: Ref }
@@ -37,7 +21,7 @@ const slug = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").r
 
 /** The property a label is merged on, and its value. */
 export function keyOf(ref: Ref): { label: string; prop: string; value: string } {
-  if (ref.label === "User") return { label: "User", prop: "id", value: USER_ID };
+  if (!("name" in ref)) return { label: "User", prop: "id", value: USER_ID };
   if (ref.label === "Person") return { label: "Person", prop: "name", value: personKey(ref.name) }; // matches the email/calendar people
   if (ref.label === "Event") return { label: "Event", prop: "id", value: `user-event:${slug(ref.name)}` };
   return { label: ref.label, prop: "name", value: ref.name.trim() };
@@ -66,10 +50,11 @@ export const upsertUser = (u: { name?: string | null; funFact?: string | null; p
     { id: USER_ID, name: u.name ?? null, funFact: u.funFact ?? null, preferences: u.preferences ?? [] },
   );
 
-export function upsertEntity(e: { type: PoleType; name: string; description?: string | null }) {
+export function upsertEntity(e: { type: PoleType; subtype?: string | null; name: string; description?: string | null }) {
   const k = keyOf({ label: e.type, name: e.name });
   const title = e.type === "Event" ? ", n.title = $name" : "";
-  return run(`MERGE (n:${k.label} {${k.prop}:$key}) SET n.description = coalesce($description, n.description)${title}`, {
+  const subtype = e.subtype ? `, n:${e.subtype}` : ""; // the second label: (:Person:Employee)
+  return run(`MERGE (n:${k.label} {${k.prop}:$key}) SET n.description = coalesce($description, n.description)${title}${subtype}`, {
     key: k.value, name: e.name.trim(), description: e.description ?? null,
   });
 }
@@ -88,6 +73,7 @@ export async function applyExtraction(x: PoleExtraction) {
   if (x.user.name || x.user.funFact || x.user.preferences.length || relations.some((r) => r.from.label === "User")) await upsertUser(x.user);
   for (const e of x.entities) await upsertEntity(e);
   for (const r of relations) await upsertRelation(r);
+  invalidateGraphSchema();
 }
 
 export interface UserProfile {

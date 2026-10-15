@@ -19,10 +19,15 @@ export interface Issue {
   blocked_by: string[]; description: string;
 }
 export interface SentMessage { to: string; text: string; ts: number }
+/** A customer account, matched to people and emails by domain and name. */
+export interface Customer { id: string; name: string; domains: string[] }
+/** A customer's project, and the tickets that are worked on for it. */
+export interface Project { id: string; name: string; customer: string; issues: string[] }
 export interface NsuiteState {
   today: string; today_name: string;
   people: Record<string, { name: string; email: string; role: string }>;
   emails: Email[]; sent_messages: SentMessage[]; events: CalEvent[]; issues: Issue[];
+  customers: Customer[]; projects: Project[];
 }
 
 /** The seed text exactly as it is on disk; reset copies it verbatim. */

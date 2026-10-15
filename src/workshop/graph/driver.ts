@@ -52,6 +52,39 @@ async function runNow<T>(cypher: string, params: Record<string, unknown>): Promi
   }
 }
 
+/** True when a value (or anything nested in it) is a node carrying one of the denied labels. */
+function touches(v: unknown, deny: string[]): boolean {
+  if (neo4j.isNode(v)) return (v as { labels: string[] }).labels.some((l) => deny.includes(l));
+  if (neo4j.isPath(v)) return [(v as any).start, (v as any).end, ...(v as any).segments.flatMap((s: any) => [s.start, s.end])].some((n) => touches(n, deny));
+  if (Array.isArray(v)) return v.some((x) => touches(x, deny));
+  if (v && typeof v === "object" && !neo4j.isInt(v) && !neo4j.isRelationship(v)) return Object.values(v).some((x) => touches(x, deny));
+  return false;
+}
+
+/**
+ * Run a query in a READ transaction, so the database itself refuses writes. Throws if any node it returns has a
+ * denied label. Used for queries a model wrote.
+ */
+export function runRead<T = Record<string, unknown>>(cypher: string, params: Record<string, unknown> = {}, deny: string[] = []): Promise<T[]> {
+  const result = queue.then(async () => {
+    if (!schemaReady) {
+      await ensureSchema();
+      schemaReady = true;
+    }
+    const session = getDriver().session({ database: process.env.NEO4J_DATABASE || "neo4j" });
+    try {
+      const res = await session.executeRead((tx) => tx.run(cypher, params));
+      const bad = res.records.some((r) => r.keys.some((k) => touches(r.get(k), deny)));
+      if (bad) throw new Error(`The query returned nodes this tool may not read (${deny.join(", ")})`);
+      return res.records.map((r) => Object.fromEntries(r.keys.map((k) => [String(k), plain(r.get(k))])) as T);
+    } finally {
+      await session.close();
+    }
+  });
+  queue = result.catch(() => undefined);
+  return result;
+}
+
 export async function ensureSchema(): Promise<void> {
   const text = readFileSync(join(ROOT, "src", "workshop", "graph", "schema.cypher"), "utf8")
     .split("\n").filter((l) => !l.trim().startsWith("//")).join("\n");
@@ -63,7 +96,7 @@ export async function ensureSchema(): Promise<void> {
   }
 }
 
-export const GRAPH_LABELS = ["Session", "Message", "SystemMessage", "Step", "ToolCall", "Tool", "Rule", "Fact", "Email", "Event", "Issue", "Person", "User", "Location", "Organization", "Object"];
+export const GRAPH_LABELS = ["Session", "Message", "SystemMessage", "Step", "ToolCall", "Tool", "Rule", "Fact", "Email", "Event", "Issue", "Person", "Customer", "Project", "User", "Location", "Organization", "Object"];
 
 /** Remove only the nodes this workshop creates (safe on a shared Aura instance). */
 export async function clearGraph(): Promise<number> {

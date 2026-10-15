@@ -52,6 +52,32 @@ export function checkSeed(seed: NsuiteState): string[] {
   for (const [what, text] of samMaterial) {
     for (const w of BANNED) must(!text.toLowerCase().includes(w), `${what} contains banned word "${w}"`);
   }
+  // Module 5: overdue payments. Each of e-038..e-040 names one customer and one of its projects, and nothing in
+  // them leads to the broken export, so that link exists only as relationships.
+  const overdue = ["e-038", "e-039", "e-040"].map((id) => seed.emails.find((e) => e.id === id));
+  must(overdue.every((e) => !!e), "expected overdue-payment emails e-038, e-039 and e-040");
+  const customerNames = seed.customers.map((c) => c.name);
+  for (const e of overdue) {
+    if (!e) continue;
+    const text = `${e.subject}\n${e.body}`;
+    const named = seed.customers.filter((c) => text.includes(c.name.split(" ")[0]));
+    must(named.length === 1, `${e.id}: must name exactly one customer, got ${named.map((c) => c.name).join(", ") || "none"}`);
+    const projectsNamed = seed.projects.filter((p) => new RegExp(`\\b${p.name}\\b`).test(text));
+    must(projectsNamed.length === 1 && projectsNamed[0].customer === named[0]?.name, `${e.id}: must name exactly one project, belonging to the customer it names`);
+    for (const w of ["export", "dana", "eng-142", "late payment"]) must(!text.toLowerCase().includes(w), `${e.id} contains "${w}"`);
+  }
+  const worldNames = [...customerNames, ...seed.projects.map((p) => p.name)];
+  const others = seed.emails.filter((e) => !["e-038", "e-039", "e-040"].includes(e.id));
+  for (const e of others) {
+    const hit = worldNames.find((n) => new RegExp(`\\b${n}\\b`).test(`${e.subject}\n${e.body}`));
+    must(!hit, `${e.id} names "${hit}": only e-038..e-040 may mention a customer or project`);
+  }
+  must(customerNames.length === 3 && seed.projects.length === 3, "expected 3 customers and 3 projects");
+  must(seed.projects.every((p) => seed.customers.some((c) => c.name === p.customer)), "every project must belong to a known customer");
+  must(seed.projects.every((p) => p.issues.every((id) => seed.issues.some((i) => i.id === id))), "every project issue must exist");
+  const contoso = seed.customers.find((c) => c.name === "Contoso");
+  must(!!contoso && contoso.domains.some((d) => seed.people.dana.email.endsWith(`@${d}`)), "Dana's email domain must belong to Contoso");
+  must(seed.projects.find((p) => p.name === "Atlas")?.issues.join() === "ENG-142", "Atlas must be the project behind ENG-142");
   return errors;
 }
 
@@ -61,5 +87,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error("seed:check FAILED\n - " + errors.join("\n - "));
     process.exit(1);
   }
-  console.log("seed:check OK (40 emails, Dana x3, Priya x2, Sam isolated, Acme planted, Tuesday event, ENG-142/139)");
+  console.log("seed:check OK (40 emails, Dana x3, Priya x2, Sam isolated, Acme planted, Tuesday event, ENG-142/139, 3 overdue-payment emails, 3 customers and projects)");
 }

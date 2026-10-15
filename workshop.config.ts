@@ -47,16 +47,16 @@ export const config: WorkshopConfig = {
   traces: true,
 
   // STAGE 3: persist user-stated facts and rules (one structured LLM call per user turn).
-  extractUserStatements: false,
+  extractUserStatements: true,
 
   // STAGE 3: map tool results (emails, events, issues) into graph entities, deterministically.
-  mapToolResults: false,
+  mapToolResults: true,
 
   // STAGE 3: inject every Rule node from the graph into the context at every step.
-  pinnedRules: false,
+  pinnedRules: true,
 
   // STAGE 3: onboarding. The agent asks who you are (name, where you live, preferred language, a fun fact) and pins what it knows about you.
-  onboarding: false,
+  onboarding: true,
 
   // STAGE 4: retrieval before each answer. "none" | "semantic" | "graph" | "both"
   retrieval: "none",

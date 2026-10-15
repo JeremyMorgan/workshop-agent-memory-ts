@@ -12,7 +12,7 @@ We start with a deliberately broken agent (mail, calendar and tickets, no memory
 | 1 | Short-term memory (history window) | ...but a rule falls out of the window and emails get deleted |
 | 2 | Context traces in Neo4j | you can't see *when* the rule left the context |
 | 3 | Long-term memory + pinned rules | facts and rules vanish between sessions |
-| 4 | Graph retrieval vs flat semantic recall | similarity can't follow a relationship |
+| 4 | Similarity, exact queries and graph walks | similarity can't answer an absence or follow a relationship |
 | 5 | Guardrails in code | the prompt is not a security boundary |
 | 6 | Poisoning and provenance | a planted "memory" is trusted blindly |
 | 7 | Make it yours | mock tools, mock world |
@@ -40,7 +40,40 @@ npm test                      # no LLM calls
 npm run chat                  # talk to the agent
 ```
 
+`npm run neo4j:up` starts Neo4j with the APOC plugin (`NEO4J_PLUGINS=["apoc"]`, downloaded on first start, so it needs network access). `query_graph` uses `apoc.meta.schema()` to read the graph's schema. Preflight checks for APOC and tells you if it is missing; if you started Neo4j before this change, run `docker compose up -d --force-recreate`.
+
 Aura: set `NEO4J_URI=neo4j+s://<id>.databases.neo4j.io`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` (and `NEO4J_DATABASE`) in `.env`. `npm run reset` only deletes the node labels this workshop creates.
+
+## Define what the agent remembers: `ontology.ts`
+
+From stage 3 the agent pulls people, things, places and events out of what you say and saves them in the graph. **You decide what counts**, in one file: [`ontology.ts`](ontology.ts).
+
+Every entity has a POLE+O type (`Person`, `Object`, `Location`, `Event`, `Organization`) and, optionally, a subtype that becomes a second Neo4j label. A colleague is saved as `(:Person:Employee)`, a customer's contact as `(:Person:Contact)`, a customer as `(:Organization:Customer)`.
+
+```ts
+Person: {
+  description: "A named individual, other than the user.",
+  subtypes: {
+    Employee: "Works at the user's own company: a colleague, manager or report.",
+    Contact: "Works at a customer or vendor: someone the user deals with from outside.",
+  },
+},
+```
+
+The descriptions are sent to the extraction model, so the clearer you are about what each thing is (and is not), the better it extracts. To change what gets extracted:
+
+1. Add a subtype: `Contractor: "Paid by the hour, not on the payroll"` under `Person.subtypes`.
+2. Add a relationship: `REPORTS_TO: { description: "Who someone reports to", from: ["Person"], to: ["Person"] }`.
+3. Optionally add an entry to `examples` to show the model what you mean.
+4. `npm run chat` and say "Sam is a contractor who reports to Priya". Check the graph:
+
+```cypher
+MATCH (n) WHERE size(labels(n)) > 1 RETURN labels(n) AS labels, coalesce(n.name, n.title) AS name
+```
+
+Nothing else needs to change. The extraction prompt, the schema the model must fill in, and the Cypher labels are all generated from this file. Names are checked when the app starts: they must be plain identifiers, because they become labels and relationship types.
+
+The schema that `query_graph` writes Cypher against is not in this file. It is read from the live database with APOC, so it shows what the agent has actually saved (including your new labels) and updates as the graph grows. Tool results (emails, calendar, tickets) are mapped by code, not the model, and use the same labels: `Issue`, `Email` and `Project` are `Object` subtypes, `Customer` is an `Organization` subtype, and `Event` nodes are also `:Meeting`.
 
 ## How the flags work
 
@@ -215,37 +248,54 @@ If the agent deleted anyway, check the `Rule` exists (query above). If extractio
 
 ---
 
-## Stage 4: graph retrieval vs flat semantic recall
+## Stage 4: similarity, exact queries and graph walks
 
 ### Goal
-Ask a question whose answer depends on a **relationship**: *"Who should I chase before Tuesday's billing review?"*
+Choose the retrieval that fits the question. The workspace has an answer for each kind:
+
+| Question | Fits | Why |
+|---|---|---|
+| *"Are any customers behind on paying us?"* | Similarity | The overdue emails (e-038 to e-040) say "past due", "overdue" and "transfer delayed", never "behind on paying" |
+| *"Which open tickets haven't come up in any meeting?"* | Exact query | An absence has no text to match |
+| *"What is blocking the issue Dana escalated?"* | Similarity, then a walk | Similarity finds the meeting and Dana's emails, relationships lead to ENG-142, ENG-139 and Sam |
 
 ### Flags
 `retrieval: "none" | "semantic" | "graph" | "both"` (`npm run step -- 4` sets `"both"`).
 - `semantic`: a vector index (local `fastembed`, cosine, top 4, Mastra's default `topK`) over the same emails, events and tickets.
-- `graph`: link entities in the question to nodes, then follow `Event → Issue → BLOCKED_BY Issue → OWNED_BY Person`.
+- `graph`: link nodes the question names (an Event title or day, an Issue id, a Customer or Project name), then walk `Email -[MENTIONS]-> Customer <-[FOR]- Project <-[PART_OF]- Issue -[BLOCKED_BY]-> Issue -[OWNED_BY]-> Person` and `Event -[ABOUT]-> Issue`. A question that names nothing links to nothing.
+- `both`: the items similarity found become starting nodes as well, so a vague question gets a start.
+
+Stage 4 also gives the agent `query_graph`, a text-to-Cypher tool: a model writes one read-only query over the data graph (emails, events, tickets, people, customers, projects), the harness checks it, runs it in a read transaction and returns the rows. Facts, rules and the trace are not in its schema and it cannot name them. It is a convenience, not a security boundary.
 
 ### Run
 ```bash
-npm run scenario -- 4
+npm run step -- 4
+npm run ingest
+npm run search -- "Are any customers behind on paying us?"
+npm run query -- unscheduledTickets
+npm run query -- overdueToWork
+npm run scenario -- 4          # needs a model key; add --record to refresh the recording
 ```
-It ingests the seed into the graph (same deterministic mappers as stage 3), prints what each side retrieved, then asks the question three times. Tools are off so the answer shows what retrieval put in the context.
+`ingest` loads the seed with the same deterministic mappers as stage 3. The mapper matches the `customers` and `projects` in `seed.json` by name and email domain, with no model, to create `Customer` and `Project` nodes, `MENTIONS`, `FOR`, `PART_OF` and `WORKS_FOR`.
 
 ### What to look for
-Semantic recall retrieves things that *sound* like the question (the calendar event, some admin emails). Sam's ticket and email contain none of "billing", "export" or "review", so nothing similar leads to him. The graph walks `Billing review → ENG-142 → ENG-139 → Sam` and the ETA (Thursday) is after the meeting.
+Similarity returns the three payment emails for the first question, and the closest meetings for the second. Only the exact query lists ENG-139, ENG-150 and ENG-151. For "Are any customers behind on paying us, and is anything on our side holding it up?", `semantic` names the customers and no ticket, `graph` retrieves nothing, and `both` also retrieves Contoso's Atlas project, ENG-142, and ENG-139 owned by Sam (ETA Thursday).
 
 ### Neo4j query
 ```cypher
-MATCH (e:Event)-[:ABOUT]->(i:Issue)-[:BLOCKED_BY]->(b:Issue)-[:OWNED_BY]->(o:Person)
-WHERE toLower(e.title) CONTAINS 'billing review'
-RETURN e.title, i.id, b.id, b.title, b.eta, o.name
+MATCH (m:Email) WHERE m.id IN ['e-038', 'e-039', 'e-040']
+MATCH (m)-[:MENTIONS]->(c:Customer)
+OPTIONAL MATCH (c)<-[:FOR]-(p:Project)
+OPTIONAL MATCH (p)<-[:PART_OF]-(i:Issue)
+OPTIONAL MATCH (i)-[:BLOCKED_BY]->(b:Issue)-[:OWNED_BY]->(o:Person)
+RETURN m.id AS email, c.name AS customer, p.name AS project, i.id AS ticket, b.id AS blockedBy, o.name AS blockerOwner
 ```
 
 ### Check you got it
-`semantic` misses Sam. `graph` names Sam and notes the ETA is after the meeting. `both` shows each side by side.
+`npm run query -- overdueToWork` returns three rows: Contoso with Atlas and ENG-142 blocked by ENG-139 (Sam), Fabrikam with Harbor and ENG-150, Tailspin Toys with Beacon and no ticket.
 
 ### If it did not work
-Run `npm run ingest` and re-check the query returns a row. If the semantic run does name Sam, run `npm run seed:check` (Sam isolation) and see `docs/DECISIONS.md` on the baseline.
+Run `npm run ingest` and re-check. If `npm run reset` or a query fails with an authentication error, another Neo4j may be listening on port 7687 ahead of the container (check `lsof -iTCP:7687 -sTCP:LISTEN`). `reset` deletes nodes with the workshop's labels, so confirm which database `NEO4J_URI` reaches before running it.
 
 ---
 
@@ -399,7 +449,7 @@ A dry-run call is in the audit log with outcome `dry-run` and the inbox is uncha
 (Step)-[:REQUESTED]->(ToolCall)                                   0..n calls per step
 (Step)-[:HAD_IN_CONTEXT]->(Message | SystemMessage)               exactly what the model saw at that step
 (SystemMessage {kind})-[:PINS]->(Rule)                            kind: pinned_rules
-(SystemMessage {kind})-[:RETRIEVED {score}]->(Email|Event|Issue|Person)   kind: semantic_recall | graph_context
+(SystemMessage {kind})-[:RETRIEVED {score}]->(Email|Event|Issue|Person|Customer|Project)   kind: semantic_recall | graph_context
 (SystemMessage)-[:ADDED_FOR]->(Message)                           the user message the block was built for
 (Rule)-[:STATED_IN]->(Message)   (Fact)-[:FROM]->(Email)
 (Email)-[:SENT_BY|TO|CC]->(Person)   (Email)-[:REPLY_TO]->(Email)
