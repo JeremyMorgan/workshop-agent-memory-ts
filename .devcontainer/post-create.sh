@@ -21,7 +21,8 @@ if [ -z "${OPENAI_API_KEY:-}" ] && ! grep -qE '^OPENAI_API_KEY=.+' .env; then
 fi
 echo "Ready. Try: npm run chat"
 
+# .devcontainer/print-links.sh
 HOST="${CODESPACE_NAME}-7474.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
-URL="https://${HOST}/browser/?connectURL=https://neo4j@${HOST}:443&db=neo4j"
+URL="https://${HOST}/browser/?connectURL=https%3A%2F%2Fneo4j%40${HOST}%3A443&db=neo4j"
 printf '\nNeo4j Browser (password: workshop-password):\n  %s\n\n' "$URL"
 printf '%s\n' "$URL" > NEO4J_BROWSER_LINK.txt
