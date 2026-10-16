@@ -29,7 +29,7 @@ The extractor returns an object that matches a zod schema, so what reaches the g
 
 Look at the `rules` field. The tool must be one of four names, and the mode is `require_approval` or `forbid`. The model cannot invent a rule for a tool that does not exist.
 
-The POLE+O part of the schema comes from `poleSchema` in `src/workshop/graph/pole.ts`: the `user`, the `entities`, and the `relations` between them. Relationship types come from a fixed list: `LIVES_IN`, `WORKS_AT`, `KNOWS`, `OWNS`, `PARTICIPATES_IN`, `LOCATED_IN`, and `RELATED_TO`.
+The POLE+O part of the schema is generated from your ontology in `ontology.ts`: the `user`, the `entities` (each with a type and an optional subtype, saved as a second label such as `(:Person:Employee)`), and the `relations` between them. Entity types, subtypes and relationship types such as `LIVES_IN` and `WORKS_AT` all come from that file, and the same file writes the extraction prompt. Add a subtype or a relationship there and the extractor will use it, with no other code change.
 
 </Column>
 
@@ -109,7 +109,7 @@ A superseded fact, such as a new city, is an `upsert` here: the node is matched 
 
 ```text title="At the prompt"
 you> Never delete anything without asking me first.
-you> Dana is our biggest customer. I live in Leeds and I like short summaries.
+you> Dana is our biggest customer. I live in London and I like short summaries.
 ```
 
 ```bash title="Check the graph"

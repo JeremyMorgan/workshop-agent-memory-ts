@@ -21,10 +21,10 @@ export const stage3: Stage = {
   stepHooks: [
     async (step) => {
       if (!config.mapToolResults) return;
-      const people = loadSeed().people;
+      const world = loadSeed(); // people, customers and projects: the dictionaries the mapper matches against
       for (const r of step.toolResults ?? []) {
         const p = r.payload ?? r;
-        await applyDelta(mapToolResult(p.toolName, p.result, people));
+        await applyDelta(mapToolResult(p.toolName, p.result, world.people, world));
       }
     },
   ],

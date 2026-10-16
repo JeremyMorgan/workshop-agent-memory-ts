@@ -785,38 +785,36 @@
       "in_reply_to": null
     },
     {
-      "sender": "facilities@northwind.test",
-      "sender_name": "Facilities",
-      "subject": "Fire drill on Thursday",
-      "date": "2025-06-05T10:00:00Z",
+      "sender": "ar@northwind.test",
+      "sender_name": "Accounts Receivable",
+      "subject": "Invoice INV-2041 is 38 days past due",
+      "date": "2025-06-06T10:15:00Z",
       "unread": true,
-      "category": "noise",
-      "body": "A fire drill will take place on Thursday at 11:00. Please use the stairs and gather at the car park.\n\nI have attached nothing to this message on purpose. Everything you need is either in the ticket tracker or in the shared folder, and keeping a single source of truth avoids the usual confusion about which attachment is current.\n\nFinally, a reminder that the office will be closed on the first Monday of next month. Plan any hand-offs accordingly, and make sure your out-of-office message points to someone who can actually act on requests while you are away.\n\nThanks for taking the time to read this. I know the inbox is busy this week, so I have tried to keep the main points near the top and put the supporting detail underneath for anyone who wants it.\n\nA quick note on timing: most of the work described here is planned around the normal weekly cadence, which means that anything raised before the end of the day on Wednesday can usually be picked up in the same cycle. Anything later tends to slip to the following week.\n\nWhere we have numbers, they come from the dashboards that the platform group maintains. Those dashboards refresh overnight, so figures quoted in the morning reflect the previous day. If something looks off, please say so and we will compare it against the raw tables before drawing conclusions.\n\nSeveral people asked for a short summary of how decisions get made on this topic. In practice it is simple: the owner proposes, the people affected comment, and if nobody objects within two working days the proposal goes ahead. Disagreements are escalated to the weekly sync.\n\nFor context, the last quarter was spent mostly on reliability. Latency dropped, the on-call load went down, and the number of manual interventions fell by roughly a third. This quarter the emphasis shifts to throughput and to cleaning up the long tail of small defects.\n\nIf you are new to the thread, the short version is that the existing approach works but is expensive to maintain. The replacement is cheaper and easier to reason about, though it needs a careful rollout because a few downstream consumers rely on undocumented behaviour.\n\nPlease do not forward this message outside the company. It contains planning detail that is not yet public, and a few of the dates are provisional. I will send an updated version as soon as they are confirmed.",
+      "category": "internal",
+      "body": "Hi Adam, as account owner for Contoso, a heads-up that invoice INV-2041 (USD 18,400, Atlas subscription) fell due on 2 May and is still unpaid. We have sent two automated reminders and had no reply from their accounts payable team. Could you check whether there is a reason the balance is being held back? If it is not settled by the end of the month we will have to pause the Atlas support entitlement.\n\nI have attached nothing to this message on purpose. Everything you need is either in the ticket tracker or in the shared folder, and keeping a single source of truth avoids the usual confusion about which attachment is current.",
       "id": "e-038",
-      "snippet": "A fire drill will take place on Thursday at 11:00. Please use the stairs and gather at the...",
-      "from": "Facilities <facilities@northwind.test>",
+      "snippet": "Hi Adam, as account owner for Contoso, a heads-up that invoice INV-2041 (USD 18,400, Atlas...",
+      "from": "Accounts Receivable <ar@northwind.test>",
       "to": [
         "Adam <adam@northwind.test>"
       ],
-      "cc": [
-        "All staff <all-staff@northwind.test>"
-      ],
+      "cc": [],
       "bcc": [],
       "message_id": "<e-038@mail.northwind.test>",
       "thread_id": "t-e-038",
       "in_reply_to": null
     },
     {
-      "sender": "alex@northwind.test",
-      "sender_name": "Alex Rivera",
-      "subject": "Book club pick",
-      "date": "2025-06-06T11:00:00Z",
-      "unread": false,
-      "category": "noise",
-      "body": "This month's book club pick is a short one about the history of the refrigerator. Come along.\n\nFinally, a reminder that the office will be closed on the first Monday of next month. Plan any hand-offs accordingly, and make sure your out-of-office message points to someone who can actually act on requests while you are away.\n\nThanks for taking the time to read this. I know the inbox is busy this week, so I have tried to keep the main points near the top and put the supporting detail underneath for anyone who wants it.\n\nA quick note on timing: most of the work described here is planned around the normal weekly cadence, which means that anything raised before the end of the day on Wednesday can usually be picked up in the same cycle. Anything later tends to slip to the following week.\n\nWhere we have numbers, they come from the dashboards that the platform group maintains. Those dashboards refresh overnight, so figures quoted in the morning reflect the previous day. If something looks off, please say so and we will compare it against the raw tables before drawing conclusions.\n\nSeveral people asked for a short summary of how decisions get made on this topic. In practice it is simple: the owner proposes, the people affected comment, and if nobody objects within two working days the proposal goes ahead. Disagreements are escalated to the weekly sync.\n\nFor context, the last quarter was spent mostly on reliability. Latency dropped, the on-call load went down, and the number of manual interventions fell by roughly a third. This quarter the emphasis shifts to throughput and to cleaning up the long tail of small defects.\n\nIf you are new to the thread, the short version is that the existing approach works but is expensive to maintain. The replacement is cheaper and easier to reason about, though it needs a careful rollout because a few downstream consumers rely on undocumented behaviour.\n\nPlease do not forward this message outside the company. It contains planning detail that is not yet public, and a few of the dates are provisional. I will send an updated version as soon as they are confirmed.\n\nOne more thing: the shared calendar now shows the maintenance windows for the next six weeks. They are deliberately short and scheduled for early morning. If a window clashes with something important on your side, tell us as early as you can and we will move it.",
+      "sender": "ar@northwind.test",
+      "sender_name": "Accounts Receivable",
+      "subject": "Second reminder: Fabrikam balance outstanding on Harbor",
+      "date": "2025-06-07T09:00:00Z",
+      "unread": true,
+      "category": "internal",
+      "body": "Hi Adam, Fabrikam's balance of USD 7,250 for the Harbor rollout is now 21 days overdue and the second reminder has gone unanswered. Their contact has said before that approvals take time, so a call from you may move it faster than another email. I have left the invoice open and will not escalate until I hear from you.\n\nFinally, a reminder that the office will be closed on the first Monday of next month. Plan any hand-offs accordingly, and make sure your out-of-office message points to someone who can actually act on requests while you are away.",
       "id": "e-039",
-      "snippet": "This month's book club pick is a short one about the history of the refrigerator. Come alo...",
-      "from": "Alex Rivera <alex@northwind.test>",
+      "snippet": "Hi Adam, Fabrikam's balance of USD 7,250 for the Harbor rollout is now 21 days overdue and...",
+      "from": "Accounts Receivable <ar@northwind.test>",
       "to": [
         "Adam <adam@northwind.test>"
       ],
@@ -827,16 +825,16 @@
       "in_reply_to": null
     },
     {
-      "sender": "community@northwind.test",
-      "sender_name": "Community Team",
-      "subject": "Volunteering day signups",
-      "date": "2025-06-07T12:00:00Z",
+      "sender": "payables@tailspin-customer.example",
+      "sender_name": "Tailspin Toys Accounts Payable",
+      "subject": "Re: Beacon invoice, transfer delayed",
+      "date": "2025-06-08T13:20:00Z",
       "unread": true,
-      "category": "noise",
-      "body": "Signups for the volunteering day are open. Pick a project from the list on the intranet.\n\nThanks for taking the time to read this. I know the inbox is busy this week, so I have tried to keep the main points near the top and put the supporting detail underneath for anyone who wants it.\n\nA quick note on timing: most of the work described here is planned around the normal weekly cadence, which means that anything raised before the end of the day on Wednesday can usually be picked up in the same cycle. Anything later tends to slip to the following week.\n\nWhere we have numbers, they come from the dashboards that the platform group maintains. Those dashboards refresh overnight, so figures quoted in the morning reflect the previous day. If something looks off, please say so and we will compare it against the raw tables before drawing conclusions.\n\nSeveral people asked for a short summary of how decisions get made on this topic. In practice it is simple: the owner proposes, the people affected comment, and if nobody objects within two working days the proposal goes ahead. Disagreements are escalated to the weekly sync.\n\nFor context, the last quarter was spent mostly on reliability. Latency dropped, the on-call load went down, and the number of manual interventions fell by roughly a third. This quarter the emphasis shifts to throughput and to cleaning up the long tail of small defects.\n\nIf you are new to the thread, the short version is that the existing approach works but is expensive to maintain. The replacement is cheaper and easier to reason about, though it needs a careful rollout because a few downstream consumers rely on undocumented behaviour.\n\nPlease do not forward this message outside the company. It contains planning detail that is not yet public, and a few of the dates are provisional. I will send an updated version as soon as they are confirmed.\n\nOne more thing: the shared calendar now shows the maintenance windows for the next six weeks. They are deliberately short and scheduled for early morning. If a window clashes with something important on your side, tell us as early as you can and we will move it.\n\nI have attached nothing to this message on purpose. Everything you need is either in the ticket tracker or in the shared folder, and keeping a single source of truth avoids the usual confusion about which attachment is current.",
+      "category": "customer",
+      "body": "Hello, thank you for your reminder about the Beacon invoice. Our finance team has not released the transfer yet because quarter-end approvals are running behind. We expect the money to reach you in about two weeks and apologise for the hold-up. Please let us know if you need anything from us in the meantime. Tailspin Toys Accounts Payable\n\nThanks for taking the time to read this. I know the inbox is busy this week, so I have tried to keep the main points near the top and put the supporting detail underneath for anyone who wants it.",
       "id": "e-040",
-      "snippet": "Signups for the volunteering day are open. Pick a project from the list on the intranet....",
-      "from": "Community Team <community@northwind.test>",
+      "snippet": "Hello, thank you for your reminder about the Beacon invoice. Our finance team has not rele...",
+      "from": "Tailspin Toys Accounts Payable <payables@tailspin-customer.example>",
       "to": [
         "Adam <adam@northwind.test>"
       ],
@@ -927,6 +925,53 @@
       "eta": null,
       "blocked_by": [],
       "description": "Rotate the credentials used by the CI runners."
+    }
+  ],
+  "customers": [
+    {
+      "id": "contoso",
+      "name": "Contoso",
+      "domains": [
+        "contoso-customer.example"
+      ]
+    },
+    {
+      "id": "fabrikam",
+      "name": "Fabrikam",
+      "domains": [
+        "fabrikam-customer.example"
+      ]
+    },
+    {
+      "id": "tailspin",
+      "name": "Tailspin Toys",
+      "domains": [
+        "tailspin-customer.example"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "atlas",
+      "name": "Atlas",
+      "customer": "Contoso",
+      "issues": [
+        "ENG-142"
+      ]
+    },
+    {
+      "id": "harbor",
+      "name": "Harbor",
+      "customer": "Fabrikam",
+      "issues": [
+        "ENG-150"
+      ]
+    },
+    {
+      "id": "beacon",
+      "name": "Beacon",
+      "customer": "Tailspin Toys",
+      "issues": []
     }
   ]
 }

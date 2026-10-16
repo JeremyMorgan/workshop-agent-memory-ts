@@ -82,28 +82,27 @@ Show the rule in the graph: `MATCH (r:Rule)-[:STATED_IN]->(m) RETURN r, m`.
 
 ---
 
-## Stage 4: graph vs flat semantic recall
+## Stage 4: similarity, exact queries and graph walks
 `npm run step -- 4` · `npm run reset` · `npm run ingest`   (loads the same data into the graph)
 
 Run **three times**, each in a **new chat**, changing `retrieval` in `workshop.config.ts` between runs (save, wait for reload):
 
-| Run | `retrieval:` | Expected |
+| Run | `retrieval:` | What reaches the model |
 |---|---|---|
-| 1 | `"semantic"` | cannot name Sam |
-| 2 | `"graph"` | names Sam, ETA Thursday is after the meeting |
-| 3 | `"both"` | names Sam |
+| 1 | `"semantic"` | the three overdue emails, no ticket and no blocker |
+| 2 | `"graph"` | nothing: the question names no customer, project, meeting or ticket |
+| 3 | `"both"` | the overdue emails, plus Contoso's Atlas project, ENG-142, and ENG-139 owned by Sam (ETA Thursday) |
 
 Messages for each run:
 1. `/tools none`
-2. `Who should I chase before Tuesday's billing review?`
+2. `Are any customers behind on paying us, and is anything on our side holding it up?`
 
    (If it says it has no tools, fine: that is the point. Retrieval decides what it knows.)
 
-Show what flat recall retrieved: `npm run scenario -- 4 --replay` prints the top 4 hits, or the graph path:
-```cypher
-MATCH (e:Event)-[:ABOUT]->(i:Issue)-[:BLOCKED_BY]->(b:Issue)-[:OWNED_BY]->(o:Person)
-WHERE toLower(e.title) CONTAINS 'billing review'
-RETURN e.title, i.id, b.id, b.eta, o.name
+Then, with tools on, ask `Which open tickets haven't come up in any meeting?` and show the `query_graph` call, or run the query yourself:
+```bash
+npm run query -- unscheduledTickets
+npm run query -- overdueToWork
 ```
 
 ---

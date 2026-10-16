@@ -72,7 +72,7 @@ Your graph holds three kinds of long-term memory. They behave differently, so th
 
 | Kind | What it is | Example | Written by |
 | --- | --- | --- | --- |
-| **Entity** | A thing in your world | `Priya`, `ENG-142`, `Leeds` | Mapper and extractor |
+| **Entity** | A thing in your world | `Priya`, `ENG-142`, `London` | Mapper and extractor |
 | **Fact** | A durable statement | "Dana is our biggest customer" | Extractor, `remember_fact` |
 | **Rule** | A standing instruction about a tool | "Never delete without asking" | Extractor |
 
@@ -90,7 +90,7 @@ Two things write entities in this workshop.
 
 **Tool results** are mapped by code. When `read_email` returns an email, a mapper writes an `Email` node, a `Person` node for the sender, and a `SENT_BY` relationship between them. No LLM is involved.
 
-**User statements** are extracted by an LLM. "I live in Leeds" becomes a `Location` called `Leeds`, linked from the `User` node with `LIVES_IN`.
+**User statements** are extracted by an LLM. "I live in London" becomes a `Location` called `London`, linked from the `User` node with `LIVES_IN`.
 
 Both write to the same model. An `Issue` or `Email` is also an `:Object`, and `Event` and `Person` are already POLE+O types, so tool results and user statements land in one graph.
 

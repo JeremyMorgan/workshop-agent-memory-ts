@@ -9,6 +9,17 @@ import { runtime, type SystemMeta } from "../runtime.js";
 export const TAG = "semantic-context";
 export const TOP_K = 4; // Mastra's semantic recall default topK
 
+/**
+ * The items most similar to the question. STAGE 6: raw text from external senders is untrusted too, so it is
+ * withheld for payment/account questions. The graph processor starts its walk from the same filtered items.
+ */
+export async function similarItems(question: string) {
+  const hits = await semanticSearch(question, TOP_K);
+  if (!config.trustFilter || !isSensitiveQuestion(question)) return { hits, withheld: [] as typeof hits };
+  const untrusted = (h: (typeof hits)[number]) => !!h.chunk.sender && isExternalSender(h.chunk.sender);
+  return { hits: hits.filter((h) => !untrusted(h)), withheld: hits.filter(untrusted) };
+}
+
 export class SemanticContext implements Processor {
   id = "semantic-context";
   private cache = new Map<string, { text: string; retrieved: NonNullable<SystemMeta["retrieved"]> }>();
@@ -19,13 +30,8 @@ export class SemanticContext implements Processor {
     const key = `${runtime.sessionId}:${runtime.turn}`; // retrieve once per user turn, not per step
     let text = this.cache.get(key)?.text;
     if (!text) {
-      let hits = await semanticSearch(q, TOP_K);
-      // STAGE 6: raw text from external senders is untrusted too, so withhold it for payment/account questions.
-      if (config.trustFilter && isSensitiveQuestion(q)) {
-        const untrusted = (h: (typeof hits)[number]) => !!h.chunk.sender && isExternalSender(h.chunk.sender);
-        runtime.factsWithheld.push(...hits.filter(untrusted).map((h) => h.chunk.text));
-        hits = hits.filter((h) => !untrusted(h));
-      }
+      const { hits, withheld } = await similarItems(q);
+      runtime.factsWithheld.push(...withheld.map((h) => h.chunk.text));
       runtime.factsServed.push(...hits.map((h) => h.chunk.text));
       const retrieved = hits.map((h) => ({ label: (h.chunk.kind === "email" ? "Email" : h.chunk.kind === "event" ? "Event" : "Issue") as "Email" | "Event" | "Issue", id: h.chunk.id, score: Number(h.score.toFixed(3)) }));
       text = `SEMANTIC RECALL (top ${TOP_K} most similar items to the question):\n` +

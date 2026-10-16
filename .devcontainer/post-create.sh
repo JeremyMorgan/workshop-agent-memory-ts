@@ -20,7 +20,7 @@ done
 npm install
 [ -f .env ] || cp .env.example .env
 
-echo "Waiting for Neo4j at ${NEO4J_URI:-bolt://neo4j:7687}..."
+echo "Waiting for Neo4j at ${NEO4J_URI:-bolt://localhost:7687}..."
 until node -e "
 const neo4j=require('neo4j-driver');
 const d=neo4j.driver(process.env.NEO4J_URI,neo4j.auth.basic(process.env.NEO4J_USERNAME,process.env.NEO4J_PASSWORD));

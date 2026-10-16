@@ -58,6 +58,27 @@ export const queries = {
              RETURN e.title AS event, e.day AS day, i.id AS issue, b.id AS blocker, b.title AS blockerTitle, b.eta AS blockerEta, o.name AS owner`,
     defaults: { event: "billing review" },
   },
+  /** A question about absence. Similarity cannot return "nothing matched". */
+  unscheduledTickets: {
+    description: "Open tickets that no meeting is about (an absence: there is no text for similarity to find)",
+    cypher: `MATCH (i:Issue) WHERE coalesce(i.status, '') <> 'done' AND NOT EXISTS { (:Event)-[:ABOUT]->(i) }
+             OPTIONAL MATCH (i)-[:OWNED_BY]->(o:Person)
+             RETURN i.id AS issue, i.title AS title, i.status AS status, o.name AS owner ORDER BY issue`,
+    defaults: {},
+  },
+  /** From emails that similarity found to the work behind the customers they mention. */
+  overdueToWork: {
+    description: "Emails -> the customer they mention -> its projects, tickets, blockers and contacts",
+    cypher: `MATCH (m:Email)-[:MENTIONS]->(c:Customer) WHERE m.id IN split($emails, ',')
+             OPTIONAL MATCH (c)<-[:FOR]-(p:Project)
+             OPTIONAL MATCH (p)<-[:PART_OF]-(i:Issue)
+             OPTIONAL MATCH (i)-[:BLOCKED_BY]->(b:Issue)-[:OWNED_BY]->(bo:Person)
+             OPTIONAL MATCH (c)<-[:WORKS_FOR]-(contact:Person)
+             RETURN m.id AS email, c.name AS customer, collect(DISTINCT contact.name) AS contacts, p.name AS project,
+                    i.id AS issue, i.status AS status, b.id AS blocker, bo.name AS blockerOwner
+             ORDER BY customer`,
+    defaults: { emails: "e-038,e-039,e-040" },
+  },
   /** Facts that came from an external email. */
   externalFacts: {
     description: "Facts whose source is an external email",

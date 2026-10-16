@@ -21,7 +21,8 @@
     "neo4j:down": "docker compose down",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts",
-    "test:llm": "tsx --test test/llm/*.test.ts"
+    "test:llm": "tsx --test test/llm/*.test.ts",
+    "search": "tsx src/workshop/retrieval/search.ts"
   },
   "license": "Apache-2.0",
   "engines": {

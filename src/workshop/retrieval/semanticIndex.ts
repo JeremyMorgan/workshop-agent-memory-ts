@@ -57,7 +57,18 @@ export async function getIndex() {
   return (index = chunks.map((chunk, i) => ({ chunk, vector: vectors[i] })));
 }
 
-export async function semanticSearch(question: string, k = 4) {
+export type Hit = { chunk: Chunk; score: number };
+
+// One question is searched by both the semantic and the graph processor ("both" mode), so embed it once.
+const searches = new Map<string, Promise<Hit[]>>();
+export function semanticSearch(question: string, k = 4): Promise<Hit[]> {
+  const key = `${k}:${question}`;
+  let hits = searches.get(key);
+  if (!hits) searches.set(key, (hits = search(question, k)));
+  return hits;
+}
+
+async function search(question: string, k: number): Promise<Hit[]> {
   const idx = await getIndex();
   // bge models are trained to embed queries with this instruction prefix; omitting it would handicap the baseline.
   const [q] = await embed([`Represent this sentence for searching relevant passages: ${question}`]);
