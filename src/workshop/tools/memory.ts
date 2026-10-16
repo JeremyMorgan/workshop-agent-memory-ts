@@ -4,6 +4,7 @@ import { config } from "../../../workshop.config.js";
 import { upsertFact, listFacts, listRules } from "../graph/store.js";
 import { lookupEntities } from "../graph/search.js";
 import { getUserProfile } from "../graph/pole.js";
+import { extractionInstructions } from "../hooks/extractUserStatements.js";
 import { withheldNotice, type TrustedFact } from "../processors/trustFilter.js";
 import type { Provenance } from "../graph/provenance.js";
 import { runtime } from "../runtime.js";
@@ -55,4 +56,13 @@ export const query_memory = spec({
       ...(notice ? { notice } : {}),
     };
   },
+});
+
+export const show_extraction_prompt = spec({
+  id: "show_extraction_prompt",
+  description:
+    "Show the exact instructions the memory extractor is given when it reads what the user says: the entity types, subtypes and relationships from ontology.ts, plus the rules for facts and standing rules. Use when the user asks what the agent extracts or why something was or was not saved.",
+  schema: z.object({}),
+  write: false,
+  mock: () => ({ prompt: extractionInstructions() }),
 });

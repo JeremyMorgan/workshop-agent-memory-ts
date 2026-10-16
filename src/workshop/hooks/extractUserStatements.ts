@@ -23,19 +23,22 @@ export const extractionSchema = z.object({
   ...poleSchema.shape,
 });
 
+/** The extractor's full instructions. The entity part is written from ontology.ts, so editing that file changes this. */
+export const extractionInstructions = () => `You extract what a user STATES, from a single message sent to their assistant.
+Return user: the user's own name, a fun fact they share about themselves, and preferences about how they like things done ("I prefer short summaries").
+${renderOntologyForPrompt()}
+Return facts: other durable things the user says about their team or their situation that are not preferences or entities (for example "Dana is our biggest customer").
+Return rules: standing instructions about how the assistant may use its tools (tools: ${TOOL_NAMES.join(", ")}). "Never delete anything without asking me first" is {tool: delete_email, mode: require_approval}. "Don't ever message customers" is {tool: send_message, mode: forbid}.
+A rule exists ONLY when the user explicitly states a standing restriction or requirement about future behaviour (words like never, always, don't ever, from now on, rule). A request to do something now is NOT a rule, and neither is permission or instructions about THIS request: "send it now, no need to confirm" is not a rule. Never turn a request to use a tool into a forbid rule.
+Do NOT extract: questions, one-off task requests ("clear out the newsletters", "read Dana's emails"), or anything the user did not say. If there is nothing, return empty arrays.`;
+
 let extractor: Agent | undefined;
 const getExtractor = () =>
   (extractor ??= new Agent({
     id: "statement-extractor",
     name: "statement-extractor",
     model: modelConfig(EXTRACTION_MODEL),
-    instructions: `You extract what a user STATES, from a single message sent to their assistant.
-Return user: the user's own name, a fun fact they share about themselves, and preferences about how they like things done ("I prefer short summaries").
-${renderOntologyForPrompt()}
-Return facts: other durable things the user says about their team or their situation that are not preferences or entities (for example "Dana is our biggest customer").
-Return rules: standing instructions about how the assistant may use its tools (tools: ${TOOL_NAMES.join(", ")}). "Never delete anything without asking me first" is {tool: delete_email, mode: require_approval}. "Don't ever message customers" is {tool: send_message, mode: forbid}.
-A rule exists ONLY when the user explicitly states a standing restriction or requirement about future behaviour (words like never, always, don't ever, from now on, rule). A request to do something now is NOT a rule, and neither is permission or instructions about THIS request: "send it now, no need to confirm" is not a rule. Never turn a request to use a tool into a forbid rule.
-Do NOT extract: questions, one-off task requests ("clear out the newsletters", "read Dana's emails"), or anything the user did not say. If there is nothing, return empty arrays.`,
+    instructions: extractionInstructions(),
   }));
 
 export async function extractStatements(text: string) {

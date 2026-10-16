@@ -223,7 +223,7 @@ Part 1 is the stage 1 script again. Part 2 is a warm-up run. Part 3 is a fresh s
 npm run step -- 3
 npm run chat
 ```
-Say hi. The agent asks your name, where you live, which language you want replies in and a fun fact. Answer, for example *"I'm Sam, I live in Leeds, reply in English, I like short summaries, and I once rode a camel"*. Type `/new`, then ask *"what do you know about me?"*: the new session recalls it from the graph, with no history. The scripted scenarios turn onboarding off.
+Say hi. The agent asks your name, where you live, which language you want replies in and a fun fact. Answer, for example *"I'm Sam, I live in London, reply in English, I like short summaries, and I once rode a camel"*. Type `/new`, then ask *"what do you know about me?"*: the new session recalls it from the graph, with no history. The scripted scenarios turn onboarding off.
 
 ### What to look for
 Part 1: the agent only **suggests** deletions. Part 3: the answer uses facts persisted in Part 2.

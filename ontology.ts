@@ -71,9 +71,9 @@ export const ontology: Ontology = {
   },
   examples: [
     {
-      text: "I live in Leeds and I work at Neo4j.",
-      entities: [{ type: "Location", subtype: "City", name: "Leeds" }, { type: "Organization", name: "Neo4j" }],
-      relations: [{ from: "user", type: "LIVES_IN", to: "Leeds" }, { from: "user", type: "WORKS_AT", to: "Neo4j" }],
+      text: "I live in London and I work at Neo4j.",
+      entities: [{ type: "Location", subtype: "City", name: "London" }, { type: "Organization", name: "Neo4j" }],
+      relations: [{ from: "user", type: "LIVES_IN", to: "London" }, { from: "user", type: "WORKS_AT", to: "Neo4j" }],
     },
     {
       text: "Dana from Contoso is our biggest customer contact.",

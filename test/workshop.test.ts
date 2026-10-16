@@ -16,6 +16,8 @@ import { renderGraphContext } from "../src/workshop/processors/graphContext.js";
 import { checkCypher } from "../src/workshop/tools/graph.js";
 import { presets, rewriteConfigSource } from "../src/workshop/harness/presets.js";
 import { execute, specs } from "../src/workshop/tools/index.js";
+import { show_extraction_prompt } from "../src/workshop/tools/memory.js";
+import { extractionInstructions } from "../src/workshop/hooks/extractUserStatements.js";
 import { runtime } from "../src/workshop/runtime.js";
 import { runGuards, installGuards, clearGuards } from "../src/workshop/tools/guards.js";
 import { appendAudit, readAudit } from "../src/workshop/nsuite/audit.js";
@@ -249,10 +251,10 @@ test("presets rewrite workshop.config.ts in place and keep comments", () => {
 
 // ── onboarding and POLE+O ───────────────────────────────────────────────────
 test("about-user block renders the profile; an empty profile is not known", () => {
-  const p = { name: "Sam", funFact: "rode a camel", preferences: ["short summaries"], links: [{ rel: "LIVES_IN", type: "Location", name: "Leeds" }] };
+  const p = { name: "Sam", funFact: "rode a camel", preferences: ["short summaries"], links: [{ rel: "LIVES_IN", type: "Location", name: "London" }] };
   const text = renderAbout(p);
   assert.match(text, /Name: Sam/);
-  assert.match(text, /lives in: Leeds/);
+  assert.match(text, /lives in: London/);
   assert.match(text, /Preferences: short summaries/);
   assert.match(text, /Fun fact: rode a camel/);
   assert.equal(isKnown(p), true);
@@ -263,10 +265,10 @@ test("about-user block renders the profile; an empty profile is not known", () =
 });
 
 test("POLE+O schema accepts known types and rejects unknown ones", () => {
-  const ok = { user: { preferences: [] }, entities: [{ type: "Location", name: "Leeds" }], relations: [{ from: "user", type: "LIVES_IN", to: "Leeds" }] };
+  const ok = { user: { preferences: [] }, entities: [{ type: "Location", name: "London" }], relations: [{ from: "user", type: "LIVES_IN", to: "London" }] };
   assert.equal(poleSchema.safeParse(ok).success, true);
   assert.equal(poleSchema.safeParse({ ...ok, entities: [{ type: "Planet", name: "Mars" }] }).success, false);
-  assert.equal(poleSchema.safeParse({ ...ok, relations: [{ from: "user", type: "DROP_ALL", to: "Leeds" }] }).success, false);
+  assert.equal(poleSchema.safeParse({ ...ok, relations: [{ from: "user", type: "DROP_ALL", to: "London" }] }).success, false);
 });
 
 test("entities carry a subtype that must belong to their type", () => {
@@ -275,6 +277,13 @@ test("entities carry a subtype that must belong to their type", () => {
   assert.equal(poleSchema.safeParse({ ...base, entities: [{ type: "Person", name: "Priya" }] }).success, true);
   assert.equal(poleSchema.safeParse({ ...base, entities: [{ type: "Person", subtype: "Customer", name: "Priya" }] }).success, false);
   assert.equal(poleSchema.safeParse({ ...base, entities: [{ type: "Person", subtype: "Wizard", name: "Priya" }] }).success, false);
+});
+
+test("show_extraction_prompt returns the prompt the extractor uses, with the ontology in it", async () => {
+  const { result } = await execute(show_extraction_prompt, {});
+  assert.equal((result as { prompt: string }).prompt, extractionInstructions());
+  assert.match((result as { prompt: string }).prompt, /Employee/);
+  assert.match((result as { prompt: string }).prompt, /Return rules/);
 });
 
 test("the extraction schema and prompt follow the ontology, so a new subtype needs no other change", () => {
@@ -321,15 +330,15 @@ test("the graph schema is rendered from APOC output, hides agent memory, and fal
 });
 
 test("relations resolve to typed endpoints; unknown endpoints are dropped; people share the first-name key", () => {
-  const entities = [{ type: "Location" as const, name: "Leeds" }, { type: "Person" as const, name: "Priya Shah" }];
+  const entities = [{ type: "Location" as const, name: "London" }, { type: "Person" as const, name: "Priya Shah" }];
   const rels = resolveRelations(entities, [
-    { from: "user", type: "LIVES_IN", to: "Leeds" },
+    { from: "user", type: "LIVES_IN", to: "London" },
     { from: "user", type: "KNOWS", to: "priya shah" },
     { from: "user", type: "OWNS", to: "a boat" },
   ]);
   assert.equal(rels.length, 2);
   assert.deepEqual(keyOf(rels[1].to), { label: "Person", prop: "name", value: "Priya" });
-  assert.deepEqual(keyOf({ label: "Event", name: "Leeds Marathon" }), { label: "Event", prop: "id", value: "user-event:leeds-marathon" });
+  assert.deepEqual(keyOf({ label: "Event", name: "London Marathon" }), { label: "Event", prop: "id", value: "user-event:london-marathon" });
 });
 
 test("presets: onboarding arrives with stage 3", () => {
